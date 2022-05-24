@@ -1,0 +1,39 @@
+ps2-msxUSB.files        This file.
+ps2-msxUSB.cpp          Main. Checks availability of PS/2 events, dispatch to MSX, check PS/2 keep alive and updates status leds.
+system.h                System definitions of the project.
+msxmap.cpp              MSX specific translations, dispatch keys to MSX by interrupts and when there are no interrupts.
+msxmap.h                Header file of msxmap.cpp.
+ps2handl.cpp            Module to interact with PS/2 keyboard.
+ps2handl.h              Header file of ps2handl.cpp.
+dbasemgtF1.c            Check database STM32F1 integrity on startup; if there is no keyboard, waits for user to cleanup and gets and flashes database.
+dbasemgtF1.h            Header file of dbasemgtF1.c.
+dbasemgtF4.c            Check database STM32F4 integrity on startup; if there is no keyboard, waits for user to cleanup and gets and flashes database.
+dbasemgtF4.h            Header file of dbasemgtF4.c.
+database.c              Factory default Database.
+hr_timer.c              High Resolution Timer. Used to microsecond delays and Compare and Capture times  of PS2 Clock.
+hr_timer.h              Header file of dbasemgtF4.c.
+sys_timer.cpp           System Timer: Marks led blinking, depending of PS/2 connection status; Do timed smooth typing call.
+sys_timer.h             Header file of sys_timer.cpp.
+serial.c                Manages UART RX and TX buffers and interrupts, and do general to/from string conversions.
+serial.h                Header file of serial.c.
+SpecialFaultHandlers.c  Detailed error messages in exception condition.
+SpecialFaultHandlers.h  Header file of SpecialFaultHandlers.c.
+basic_usb_desc.c        Standards Device, Config and more
+cdcacm.c                USB general descriptors and tmain module.
+cdcacm.h                Header file of cdcacm.c.
+usb_conf.h              Prototypes of USB functions.
+winusb_defs.h           Definitions of windows OS for USB.
+winusb.c                Windows OS specifics for USB.
+winusb.h                Header file of winusb.c.
+usb21_standard.c        USB BOS (Binary Object Store) descriptor processsing.
+usb21_standard.h        Header file of usb21_standard.c.
+webusb.c                USB Web browser processing.
+webusb.h                Header file of webusb.c.
+logger.cpp              Print debug data.
+logger.h                Header file of logger.cpp.
+Makefile                Makefile.
+Makefile.include        Part of Makefile.
+rules.mk                Part of Makefile.
+stm32f401xC.ld          Linker memory definitions.
+stlink-swd.ocd          Open ocd command file.
+LICENSE                 Licence instructions file.
