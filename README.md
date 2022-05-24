@@ -94,11 +94,11 @@ The structure of the Database is:
 ## Hardware and Setup
 STM32F4x1 MiniF4 already comes with DFU (Device Firmware Upgrade) available in the system ROM to download code via USB port, so you don't neither need ST-Link, J-link or Black Magic Probe nor serial adapters to download your code. So, on linux, just follow these steps:
 
-    1. Install dfu-util. This example is for Debian family Linux (Debian, Ubuntu, Mint, etc): `sudo apt install dfu-util`
-    2. Make sure the chip is at least 25°C (you may let it working for a while with the help of your finger), because its internal RC oscillator was factory trimmed to 25°C;
-    3. Plug the USB cable to your computer and the STM32F4x1 MiniF4 (Black Pill) board while holding both NRST and BOOT0;
-    4. Then release BOOT0 AFTER 0.5 second you released NRST;
-    5. Run the command to flash the code itself: `dfu-util -d 0483:df11 -a 0 -s 0x08000000 -D ps2-msxUSB.bin`
+1. Install dfu-util. This example is for Debian family Linux (Debian, Ubuntu, Mint, etc): `sudo apt install dfu-util`
+2. Make sure the chip is at least 25°C (you may let it working for a while with the help of your finger), because its internal RC oscillator was factory trimmed to 25°C;
+3. Plug the USB cable to your computer and the STM32F4x1 MiniF4 (Black Pill) board while holding both NRST and BOOT0;
+4. Then release BOOT0 AFTER 0.5 second you released NRST;
+5. Run the command to flash the code itself: `dfu-util -d 0483:df11 -a 0 -s 0x08000000 -D ps2-msxUSB.bin`
 
 On windows you can download STM32CubeProg on ST site, replacing step 1. You have to adjust step 5 to this tool. Please follow ST instructions.
 
