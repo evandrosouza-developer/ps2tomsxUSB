@@ -1,7 +1,13 @@
-# STM32: PS/2 to USB Converter
+# PS/2 to MSX Keyboard Converter Interface based on STM32
 
-This code facilitates a STM32 chip to convert between PS/2 and MSX computer. It is meant to connect a keyboard, which only provides a PS/2 connector, to a MSX (or any one that have a up to 15 active columns and reads zeroes througth 8 bits - up to 15 x 8 matrix) computer.
-This code powers and has been tested on the following Windows keyboards with brazilian 275 layout:
+This interface has the function of adapt and use a PS/2 keyboard as source to zeroed matrix based computers, like MSX and ZX-Spectrum as destination. It is meant to connect a keyboard, which only provides a PS/2 connector, to a MSX (or any one that have a up to 15 active columns and reads zeroes througth 8 bits - up to 15 x 8 matrix) computer.
+The aim of this design is to allow user to customaze and update the database layout of this PS/2 Keyboard, as like as the MSX one, through an USB (or serial) interface.
+To edit the Database file, both source and target keyboard layouts, I boldly recommend you to use the excel file `PS2toMSX-BR Mapping220204.xlsm` available at github page.
+The default database mappings for the keyboard layouts are:
+- Source (PS/2 keyboard): 275 (ABNT2 layout - Brazilian Technical Norms Association);
+- Target: Brazilian Sharp/Epcom Hotbit HB8000 MSX.
+
+This interface powers and has been tested as OK on the following Windows PS/2 keyboards:
 - Compaq RT235BTWBR;
 - Clone KE11090749;
 - Clone #09100.
@@ -59,7 +65,7 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 - Caps LED - Connect to MSX PPI 8255 Signal PC6 (Hotbit HB-8000 CI-15 Pin 11 / Expert XP-800 CI-4);
 - Kana LED - Connect to MSX YM2149 IOB7, pin 6 of DIP package. If the MSX doesn't have this, you can leave it open, as it already has an internal pull-up connection.
 
-3) USB or Serial connection: Needed only to update internal PS/2 to MSX key mapping Database. To create this Intel Hex file, better to use the Macro based Excel file, so you have to trust and enable macro excecution in excel app.
+3) USB or Serial connection: Needed only to update internal PS/2 to MSX key mapping Database. To create this Intel Hex file, better to use the Macro based Excel file, so you have to trust and enable macro excecution in excel file `PS2toMSX-BR Mapping220204.xlsm` available at github page. Fill the desired mapping settings on the `Your MSX Definitions` and click on the MSX picture at upper left corner to run the automation process. This automation is also compatible with LibreOffice/StarOffice/OpenOffice, as tested with LibreOffice up to version 7.3.
 The structure of the Database is:
 	The  three first columns of each line are the mapped scan codes;
 	The 4th column is The Control Byte, detailed bellow:
@@ -103,3 +109,8 @@ STM32F4x1 MiniF4 already comes with DFU (Device Firmware Upgrade) available in t
 On windows you can download STM32CubeProg on ST site, replacing step 1. You have to adjust step 5 to this tool. Please follow ST instructions.
 
 I recomend to use a ST-Link v2 Programmer, Black Magic Probe (or similar) to flash the program using make flash onto the STM32, as so, you will be able to do debugging.
+
+Blue Pill (STM32F103C6T6 and STM32F103C8T6)
+Usage of Blue Pill is an option, but you will have to compile the code, as the default is the black pill, because the default is cheaper, faster, more modern and powerful, and it has enough resources to have USB implemented.
+Use a ST-Link v2 Programmer (or similar) to flash the program using `make flash` onto the STM32.
+
