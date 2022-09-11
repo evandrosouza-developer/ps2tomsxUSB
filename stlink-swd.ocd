@@ -1,0 +1,15 @@
+# file: stlink-swd.ocd
+
+# This  was the real file I used to debug through openocd to develop this project
+
+# Select stlink probe
+source [find interface/stlink.cfg]
+
+# Select stm32f4xx as target
+source [find target/stm32f4x.cfg]
+
+# Select swd 
+transport select hla_swd
+
+# Open gdbserver to the network.
+bindto 0.0.0.0

@@ -1,10 +1,7 @@
 /*
- * This file is part of the PS/2 Keyboard Adapter for MSX, using libopencm3 project.
+ * This file is part of the PS/2 keyboard Interface for MSX project.
  *
- * Copyright (C) 2021 Evandro Souza <evandro.r.souza@gmail.com>
- *
- * This original SW is compiled to a Sharp/Epcom MSX HB-8000 and a brazilian ABNT2 PS/2 keyboard (ID=275)
- * But it is possible to update the table sending a Intel Hex File through serial or USB
+ * Copyright (C) 2022 Evandro Souza <evandro.r.souza@gmail.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -22,25 +19,20 @@
 
 //Use Tab width=2
 
-
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/exti.h>
+//#include <libopencm3/stm32/dbgmcu.h>
 
-#include "msxmap.h"
 #include "system.h"
+#include "msxmap.h"
 #include "ps2handl.h"
 #include "serial.h"
-#if MCU == STM32F103C8
-#include "dbasemgtF1.h"
-#endif
-#if MCU == STM32F401CC
-#include "dbasemgtF4.h"
-#endif
+#include "dbasemgt.h"
 
-#define MAX_TIME_OF_IDLE_KEYSCAN_SYSTICKS	3		//30 / 3 = 10 times per second is the maximum sweep speed
+#define MAX_TIME_OF_IDLE_KEYSCAN_SYSTICKS	4		//30 / 4 = 7.5 times per second is the maximum sweep speed
 #define	NIBBLE														4
 #define	CASE_MASK													0x03
 #define	CASEx_TYPE												3		//Relative position within a line of Case type
@@ -91,7 +83,7 @@ extern bool enable_xon_xoff;									//Declared on serial.c
 #define DISPATCH_QUEUE_SIZE								16
 uint8_t dispatch_keys_queue_buffer[DISPATCH_QUEUE_SIZE];
 
-struct ring dispatch_keys_queue;
+struct sring dispatch_keys_queue;
 
 // Table to translate the Y order: From port read to the expected one:
 const uint8_t Y_XLAT_TABLE[uint8_t(16)] = { 0b0000, 0b1000, 0b0100, 0b1100,
@@ -103,27 +95,27 @@ const uint8_t Y_XLAT_TABLE[uint8_t(16)] = { 0b0000, 0b1000, 0b0100, 0b1100,
 void msxmap::msx_interface_setup(void)
 {
 	//Set Alternate function
-#if MCU == STM32F401CC
-	gpio_set_af(Y0_port, GPIO_AF3, Y0_pin_id | Y1_pin_id | Y2_pin_id | Y3_pin_id);
-	gpio_set_af( X_port, GPIO_AF3, X0_pin_id | X1_pin_id | X2_pin_id | X3_pin_id | X4_pin_id | X5_pin_id | X6_pin_id | X7_pin_id);
+#if MCU == STM32F401
+	gpio_set_af(Y0_PORT, GPIO_AF3, Y0_PIN | Y1_PIN | Y2_PIN | Y3_PIN);
+	gpio_set_af( X_PORT, GPIO_AF3, X0_PIN | X1_PIN | X2_PIN | X3_PIN | X4_PIN | X5_PIN | X6_PIN | X7_PIN);
 #endif
 
 	//Not the STM32 default, but it is the default MSX state: Release MSX keys;
-	gpio_set(X_port,
-	X7_pin_id | X6_pin_id | X5_pin_id | X4_pin_id | X3_pin_id | X2_pin_id | X1_pin_id | X0_pin_id);
+	gpio_set(X_PORT,
+	X7_PIN | X6_PIN | X5_PIN | X4_PIN | X3_PIN | X2_PIN | X1_PIN | X0_PIN);
 
 	//Init output port B
-	//gpio_mode_setup(X7_port, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_OPENDRAIN, 
-	//X7_pin_id | X6_pin_id | X5_pin_id | X4_pin_id | X3_pin_id | X2_pin_id | X1_pin_id | X0_pin_id);
-#if MCU == STM32F103C8
-	gpio_set_mode(X7_port, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_OPENDRAIN, 
-	X7_pin_id | X6_pin_id | X5_pin_id | X4_pin_id | X3_pin_id | X2_pin_id | X1_pin_id | X0_pin_id);
-#endif	//#if MCU == STM32F103C8
-#if MCU == STM32F401CC
-	gpio_mode_setup(X_port, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP,
-	X7_pin_id | X6_pin_id | X5_pin_id | X4_pin_id | X3_pin_id | X2_pin_id | X1_pin_id | X0_pin_id);
-	gpio_set_output_options(X_port, GPIO_OTYPE_OD, GPIO_OSPEED_100MHZ,
-	X7_pin_id | X6_pin_id | X5_pin_id | X4_pin_id | X3_pin_id | X2_pin_id | X1_pin_id | X0_pin_id);
+	//gpio_mode_setup(X7_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_OPENDRAIN, 
+	//X7_PIN | X6_PIN | X5_PIN | X4_PIN | X3_PIN | X2_PIN | X1_PIN | X0_PIN);
+#if MCU == STM32F103
+	gpio_set_mode(X7_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_OPENDRAIN, 
+	X7_PIN | X6_PIN | X5_PIN | X4_PIN | X3_PIN | X2_PIN | X1_PIN | X0_PIN);
+#endif	//#if MCU == STM32F103
+#if MCU == STM32F401
+	gpio_mode_setup(X_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP,
+	X7_PIN | X6_PIN | X5_PIN | X4_PIN | X3_PIN | X2_PIN | X1_PIN | X0_PIN);
+	gpio_set_output_options(X_PORT, GPIO_OTYPE_OD, GPIO_OSPEED_100MHZ,
+	X7_PIN | X6_PIN | X5_PIN | X4_PIN | X3_PIN | X2_PIN | X1_PIN | X0_PIN);
 #endif
 
 	//Init startup state of BSSR image to each Y scan
@@ -131,88 +123,88 @@ void msxmap::msx_interface_setup(void)
 		x_bits[ i ] = X7_SET_OR | X6_SET_OR | X5_SET_OR | X4_SET_OR | X3_SET_OR | X2_SET_OR | X1_SET_OR | X0_SET_OR;
 	
 	// Initialize dispatch_keys_queue ringbuffer
-	ring_init(&dispatch_keys_queue, dispatch_keys_queue_buffer);
+	ring_init(&dispatch_keys_queue, dispatch_keys_queue_buffer, DISPATCH_QUEUE_SIZE);
 	for(uint16_t i=0; i<DISPATCH_QUEUE_SIZE; ++i)
 		dispatch_keys_queue.data[i]=0;
 
 	// GPIO pins for MSX keyboard Y scan (PC3:0 of the MSX 8255 - PC3 MSX 8255 Pin 17)
-	//gpio_set(Y3_port, Y3_pin_id); //pull up resistor
-#if MCU == STM32F103C8
-	gpio_set(Y3_port, Y3_pin_id); //pull up resistor
-	gpio_set_mode(Y3_port, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, Y3_pin_id); // PC3 (MSX 8255 Pin 17)
-	exti_select_source(Y3_exti, Y3_port);
+	//gpio_set(Y3_PORT, Y3_PIN); //pull up resistor
+#if MCU == STM32F103
+	gpio_set(Y3_PORT, Y3_PIN); //pull up resistor
+	gpio_set_mode(Y3_PORT, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, Y3_PIN); // PC3 (MSX 8255 Pin 17)
+	exti_select_source(Y3_exti, Y3_PORT);
 	exti_set_trigger(Y3_exti, EXTI_TRIGGER_BOTH); //Interrupt on change
 	exti_reset_request(Y3_exti);
 	exti_enable_request(Y3_exti);
-	gpio_port_config_lock(Y3_port, Y3_pin_id);
-#endif	//#if MCU == STM32F103C8
-#if MCU == STM32F401CC
-	gpio_mode_setup(Y3_port, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, Y3_pin_id); // PC3 (MSX 8255 Pin 17)
-	exti_select_source(Y3_exti, Y3_port);
+	gpio_port_config_lock(Y3_PORT, Y3_PIN);
+#endif	//#if MCU == STM32F103
+#if MCU == STM32F401
+	gpio_mode_setup(Y3_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, Y3_PIN); // PC3 (MSX 8255 Pin 17)
+	exti_select_source(Y3_exti, Y3_PORT);
 	exti_set_trigger(Y3_exti, EXTI_TRIGGER_BOTH); //Interrupt on change
 	exti_reset_request(Y3_exti);
 	exti_enable_request(Y3_exti);
-	gpio_port_config_lock(Y3_port, Y3_pin_id);
+	gpio_port_config_lock(Y3_PORT, Y3_PIN);
 #endif
 
 	// GPIO pins for MSX keyboard Y scan (PC3:0 of the MSX 8255 - PC2 MSX 8255 Pin 16)
-	//gpio_set(Y2_port, Y2_pin_id); //pull up resistor
-#if MCU == STM32F103C8
-	gpio_set(Y2_port, Y2_pin_id); //pull up resistor
-	gpio_set_mode(Y2_port, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, Y2_pin_id); // PC2 (MSX 8255 Pin 16)
-	exti_select_source(Y2_exti, Y2_port);
+	//gpio_set(Y2_PORT, Y2_PIN); //pull up resistor
+#if MCU == STM32F103
+	gpio_set(Y2_PORT, Y2_PIN); //pull up resistor
+	gpio_set_mode(Y2_PORT, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, Y2_PIN); // PC2 (MSX 8255 Pin 16)
+	exti_select_source(Y2_exti, Y2_PORT);
 	exti_set_trigger(Y2_exti, EXTI_TRIGGER_BOTH); //Interrupt on change
 	exti_reset_request(Y2_exti);
 	exti_enable_request(Y2_exti);
-	gpio_port_config_lock(Y2_port, Y2_pin_id);
-#endif	//#if MCU == STM32F103C8
-#if MCU == STM32F401CC
-	gpio_mode_setup(Y2_port, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, Y2_pin_id); // PC2 (MSX 8255 Pin 16)
-	exti_select_source(Y2_exti, Y2_port);
+	gpio_port_config_lock(Y2_PORT, Y2_PIN);
+#endif	//#if MCU == STM32F103
+#if MCU == STM32F401
+	gpio_mode_setup(Y2_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, Y2_PIN); // PC2 (MSX 8255 Pin 16)
+	exti_select_source(Y2_exti, Y2_PORT);
 	exti_set_trigger(Y2_exti, EXTI_TRIGGER_BOTH); //Interrupt on change
 	exti_reset_request(Y2_exti);
 	exti_enable_request(Y2_exti);
-	gpio_port_config_lock(Y2_port, Y2_pin_id);
+	gpio_port_config_lock(Y2_PORT, Y2_PIN);
 #endif
 
 	// GPIO pins for MSX keyboard Y scan (PC3:0 of the MSX 8255 - PC1 MSX 8255 Pin 15)
-	//gpio_set(Y1_port, Y1_pin_id); //pull up resistor
-#if MCU == STM32F103C8
-	gpio_set(Y1_port, Y1_pin_id); //pull up resistor
-	gpio_set_mode(Y1_port, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, Y1_pin_id); // PC1 (MSX 8255 Pin 15)
-	exti_select_source(Y1_exti, Y1_port);
+	//gpio_set(Y1_PORT, Y1_PIN); //pull up resistor
+#if MCU == STM32F103
+	gpio_set(Y1_PORT, Y1_PIN); //pull up resistor
+	gpio_set_mode(Y1_PORT, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, Y1_PIN); // PC1 (MSX 8255 Pin 15)
+	exti_select_source(Y1_exti, Y1_PORT);
 	exti_set_trigger(Y1_exti, EXTI_TRIGGER_BOTH); //Interrupt on change
 	exti_reset_request(Y1_exti);
 	exti_enable_request(Y1_exti);
-	gpio_port_config_lock(Y1_port, Y1_pin_id);
-#endif	//#if MCU == STM32F103C8
-#if MCU == STM32F401CC
-	gpio_mode_setup(Y1_port, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, Y1_pin_id); // PC1 (MSX 8255 Pin 15)
-	exti_select_source(Y1_exti, Y1_port);
+	gpio_port_config_lock(Y1_PORT, Y1_PIN);
+#endif	//#if MCU == STM32F103
+#if MCU == STM32F401
+	gpio_mode_setup(Y1_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, Y1_PIN); // PC1 (MSX 8255 Pin 15)
+	exti_select_source(Y1_exti, Y1_PORT);
 	exti_set_trigger(Y1_exti, EXTI_TRIGGER_BOTH); //Interrupt on change
 	exti_reset_request(Y1_exti);
 	exti_enable_request(Y1_exti);
-	gpio_port_config_lock(Y1_port, Y1_pin_id);
+	gpio_port_config_lock(Y1_PORT, Y1_PIN);
 #endif
 
 	// GPIO pins for MSX keyboard Y scan (PC3:0 of the MSX 8255 - PC0 MSX 8255 Pin 14)
-	//gpio_set(Y0_port, Y0_pin_id); //pull up resistor
-#if MCU == STM32F103C8
-	gpio_set(Y0_port, Y0_pin_id); //pull up resistor
-	gpio_set_mode(Y0_port, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, Y0_pin_id); // PC0 (MSX 8255 Pin 14)
-	exti_select_source(Y0_exti, Y0_port);
+	//gpio_set(Y0_PORT, Y0_PIN); //pull up resistor
+#if MCU == STM32F103
+	gpio_set(Y0_PORT, Y0_PIN); //pull up resistor
+	gpio_set_mode(Y0_PORT, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, Y0_PIN); // PC0 (MSX 8255 Pin 14)
+	exti_select_source(Y0_exti, Y0_PORT);
 	exti_set_trigger(Y0_exti, EXTI_TRIGGER_BOTH); //Interrupt on change
 	exti_reset_request(Y0_exti);
 	exti_enable_request(Y0_exti);
-	gpio_port_config_lock(Y0_port, Y0_pin_id);
-#endif	//#if MCU == STM32F103C8
-#if MCU == STM32F401CC
-	gpio_mode_setup(Y0_port, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, Y0_pin_id); // PC0 (MSX 8255 Pin 14)
-	exti_select_source(Y0_exti, Y0_port);
+	gpio_port_config_lock(Y0_PORT, Y0_PIN);
+#endif	//#if MCU == STM32F103
+#if MCU == STM32F401
+	gpio_mode_setup(Y0_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, Y0_PIN); // PC0 (MSX 8255 Pin 14)
+	exti_select_source(Y0_exti, Y0_PORT);
 	exti_set_trigger(Y0_exti, EXTI_TRIGGER_BOTH); //Interrupt on change
 	exti_reset_request(Y0_exti);
 	exti_enable_request(Y0_exti);
-	gpio_port_config_lock(Y0_port, Y0_pin_id);
+	gpio_port_config_lock(Y0_PORT, Y0_PIN);
 #endif
 
 	// GPIO pins for MSX keyboard Y scan (PC3:0 of the MSX 8255 - PC0 MSX 8255 Pin 14),
@@ -220,27 +212,27 @@ void msxmap::msx_interface_setup(void)
 	// Set both to input and enable internal pullup
 
 	// CAPS_LED
-#if MCU == STM32F103C8
-	gpio_set_mode(CAPSLOCK_port, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, CAPSLOCK_pin_id); // CAP_LED (MSX 8255 Pin 11)
-	gpio_set(CAPSLOCK_port, CAPSLOCK_pin_id); //pull up resistor
-	gpio_port_config_lock(CAPSLOCK_port, CAPSLOCK_pin_id);
-#endif	//#if MCU == STM32F103C8
-#if MCU == STM32F401CC
-	gpio_mode_setup(CAPSLOCK_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, CAPSLOCK_PIN_ID); // CAP_LED (MSX 8255 Pin 11)
-	gpio_set(CAPSLOCK_PORT, CAPSLOCK_PIN_ID); //pull up resistor
-	gpio_port_config_lock(CAPSLOCK_PORT, CAPSLOCK_PIN_ID);
+#if MCU == STM32F103
+	gpio_set_mode(CAPSLOCK_PORT, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, CAPSLOCK_PIN); // CAP_LED (MSX 8255 Pin 11)
+	gpio_set(CAPSLOCK_PORT, CAPSLOCK_PIN); //pull up resistor
+	gpio_port_config_lock(CAPSLOCK_PORT, CAPSLOCK_PIN);
+#endif	//#if MCU == STM32F103
+#if MCU == STM32F401
+	gpio_mode_setup(CAPSLOCK_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, CAPSLOCK_PIN); // CAP_LED (MSX 8255 Pin 11)
+	gpio_set(CAPSLOCK_PORT, CAPSLOCK_PIN); //pull up resistor
+	gpio_port_config_lock(CAPSLOCK_PORT, CAPSLOCK_PIN);
 #endif
 
 	// Kana LED
-#if MCU == STM32F103C8
-	gpio_set_mode(KANA_port, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, KANA_pin_id); // KANA_LED - Mapeado para Scroll Lock
-	gpio_set(KANA_port, KANA_pin_id); //pull up resistor
-	gpio_port_config_lock(KANA_port, KANA_pin_id);
-#endif	//#if MCU == STM32F103C8
-#if MCU == STM32F401CC
-	gpio_mode_setup(KANA_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, KANA_PIN_ID); // KANA_LED - Mapeado para Scroll Lock
-	gpio_set(KANA_PORT, KANA_PIN_ID); //pull up resistor
-	gpio_port_config_lock(KANA_PORT, KANA_PIN_ID);
+#if MCU == STM32F103
+	gpio_set_mode(KANA_PORT, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, KANA_PIN); // KANA_LED - Mapeado para Scroll Lock
+	gpio_set(KANA_PORT, KANA_PIN); //pull up resistor
+	gpio_port_config_lock(KANA_PORT, KANA_PIN);
+#endif	//#if MCU == STM32F103
+#if MCU == STM32F401
+	gpio_mode_setup(KANA_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, KANA_PIN); // KANA_LED - Mapeado para Scroll Lock
+	gpio_set(KANA_PORT, KANA_PIN); //pull up resistor
+	gpio_port_config_lock(KANA_PORT, KANA_PIN);
 #endif
 
 	// Enable EXTI9_5 interrupt. (for Y - bits 3 to 0)
@@ -249,19 +241,21 @@ void msxmap::msx_interface_setup(void)
 	//Highest priority to avoid interrupt Y scan loss
 	nvic_set_priority(NVIC_EXTI9_5_IRQ, IRQ_PRI_Y_SCAN); 		//Y3 to Y0
 
+#if MCU == STM32F401
 	//Workaround here to stop iwdg, wwdg and TIMx counters during halt
-#if TIM_HR_TIMER == TIM2
+#if TIM_HR == TIM2
 	DBGMCU_APB1_FZ = DBG_IWDG_STOP | DBG_WWDG_STOP | DBG_TIM2_STOP;
-#endif	//#if TIM_HR_TIMER == TIM2
-#if TIM_HR_TIMER == TIM3
+#endif	//#if TIM_HR == TIM2
+#if TIM_HR == TIM3
 	DBGMCU_APB1_FZ = DBG_IWDG_STOP | DBG_WWDG_STOP | DBG_TIM3_STOP;
-#endif	//#if TIM_HR_TIMER == TIM3
-#if TIM_HR_TIMER == TIM4
+#endif	//#if TIM_HR == TIM3
+#if TIM_HR == TIM4
 	DBGMCU_APB1_FZ = DBG_IWDG_STOP | DBG_WWDG_STOP | DBG_TIM4_STOP;
-#endif	//#if TIM_HR_TIMER == TIM4
-#if TIM_HR_TIMER == TIM5
+#endif	//#if TIM_HR == TIM4
+#if TIM_HR == TIM5
 	DBGMCU_APB1_FZ = DBG_IWDG_STOP | DBG_WWDG_STOP | DBG_TIM5_STOP;
-#endif	//#if TIM_HR_TIMER == TIM5
+#endif	//#if TIM_HR == TIM5
+#endif	//#if MCU == STM32F401
 }
 
 
@@ -372,7 +366,7 @@ void msxmap::convert2msx()
 			{
 				//Left Control + Left Alt + Num Pad Del are pressed together
 				//User messages
-				console_send_string((uint8_t*)"Reset requested by user\r\n");
+				con_send_string((uint8_t*)"Reset requested by user\r\n");
 				reset_requested();
 			}
 			else
@@ -390,7 +384,7 @@ void msxmap::convert2msx()
 		return;
 	}
 
-	/*if (
+	if (
 	(scancode[0] == (uint8_t)2) 		&&
 	(scancode[1] == (uint8_t)0xF0)	&&
 	(scancode[2] == (uint8_t)0x77) )
@@ -398,7 +392,7 @@ void msxmap::convert2msx()
 		//NumLock Released. Return with no action
 		return;
 	}
-	*/
+
 	if (
 	( scancode[0] == (uint8_t)1)	  &&
 	((scancode[1] == (uint8_t)0x12) || (scancode[1] == (uint8_t)0x59)) )
@@ -429,7 +423,7 @@ void msxmap::convert2msx()
 	//Check PS/2 left Ctrl key released
 	((scancode[0] == (uint8_t)2)		&&
 	( scancode[1] == (uint8_t)0xF0) &&
-	((scancode[2] == (uint8_t)0x14)))																			||
+	((scancode[2] == (uint8_t)0x14)))																		||
 	//Check PS/2 right Ctrl key released
 	((scancode[0] == (uint8_t)3)		&&
 	( scancode[1] == (uint8_t)0xE0) &&
@@ -817,88 +811,104 @@ void msxmap::compute_x_bits_and_check_interrupt_stuck (
 	{
 		case 0:
 		{
-			if (x_local_setb)	{	//key release (bit set)
+			if (x_local_setb)	//key release
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] | X0_SET_OR) & X0_SET_AND;
  				break;
 			}
-			else {							//keypress (bit clear)
+			else 							//keypress
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] & X0_CLEAR_AND) | X0_CLEAR_OR;
 				break;
 			}
 		}
 		case 1:
 		{
-			if (x_local_setb) {	//key release (bit set)
+			if (x_local_setb)	//key release
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] | X1_SET_OR) & X1_SET_AND;
 				break;
 			}
-			else {							//keypress (bit clear)
+			else							//keypress
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] & X1_CLEAR_AND) | X1_CLEAR_OR;
 				break;
 			}
 		}
 		case 2:
 		{
-			if (x_local_setb) {
+			if (x_local_setb)
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] | X2_SET_OR) & X2_SET_AND;
 				break;
 			}
-			else {
+			else
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] & X2_CLEAR_AND) | X2_CLEAR_OR;
 				break;
 			}
 		}
 		case 3:
 		{
-			if (x_local_setb) {
+			if (x_local_setb)
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] | X3_SET_OR) & X3_SET_AND;
 				break;
 			}
-			else {
+			else
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] & X3_CLEAR_AND) | X3_CLEAR_OR;
 				break;
 			}
 		}
 		case 4:
 		{
-			if (x_local_setb) {
+			if (x_local_setb)
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] | X4_SET_OR) & X4_SET_AND;
 				break;
 			}
-			else {
+			else
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] & X4_CLEAR_AND) | X4_CLEAR_OR;
 				break;
 			}
 		}
 		case 5:
 		{
-			if (x_local_setb) {
+			if (x_local_setb)
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] | X5_SET_OR) & X5_SET_AND;
 				break;
 			}
-			else {
+			else
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] & X5_CLEAR_AND) | X5_CLEAR_OR;
 				break;
 			}
 		}
 		case 6:
 		{
-			if (x_local_setb) {
+			if (x_local_setb)
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] | X6_SET_OR) & X6_SET_AND;
 				break;
 			}
-			else {
+			else
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] & X6_CLEAR_AND) | X6_CLEAR_OR;
 				break;
 			}
 		}
 		case 7:
 		{
-			if (x_local_setb) {
+			if (x_local_setb)
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] | X7_SET_OR) & X7_SET_AND;
 				break;
 			}
-			else {
+			else
+			{
 				x_bits[Y_XLAT_TABLE[y_local]] = (x_bits[Y_XLAT_TABLE[y_local]] & X7_CLEAR_AND) | X7_CLEAR_OR;
 				break;
 			}
@@ -911,12 +921,22 @@ void msxmap::compute_x_bits_and_check_interrupt_stuck (
 		//Verify the actual hardware Y_SCAN
 		// First I have to disable Y_SCAN interrupts, to avoid misspelling due to updates
 		exti_disable_request(Y3_exti | Y2_exti | Y1_exti | Y0_exti);
+#if MCU == STM32F401
 		// Read the MSX keyboard Y scan through G5PIO pins A5:A8, mask to 0 other bits and rotate right 5
-		msx_Y_scan = (gpio_port_read(Y0_port) & Y_MASK) >> 5;
+		msx_Y_scan = (gpio_port_read(Y0_PORT) & Y_MASK) >> 5;
 		
 		if(Y_XLAT_TABLE[y_local] == msx_Y_scan)
-			GPIO_BSRR(X_port) = x_bits[msx_Y_scan]; //Atomic GPIOB update => Release and press MSX keys for this column
-		
+			GPIO_BSRR(X_PORT) = x_bits[msx_Y_scan]; //Atomic GPIOB update => Release and press MSX keys for this column
+#endif	//#if MCU == STM32F401
+
+#if MCU == STM32F103
+		// Read the MSX keyboard Y scan through GPIO pins A12:A8, mask to 0 other bits and rotate right 8 and 9
+		msx_Y_scan = (gpio_port_read(GPIOA)) & Y_MASK;
+		msx_Y_scan = ((msx_Y_scan >> 8) & 0x3) | ((msx_Y_scan >> 9) & 0xC);
+
+		GPIOB_BSRR = x_bits[msx_Y_scan]; //Atomic GPIOB update => Release and press MSX keys for this column
+#endif	//#if MCU == STM32F103
+
 		//Than reenable Y_SCAN interrupts
 		exti_enable_request(Y0_exti | Y1_exti | Y2_exti | Y3_exti);
 	}
@@ -928,23 +948,79 @@ void msxmap::compute_x_bits_and_check_interrupt_stuck (
 /******************************************* ISR's ***********************************************/
 /*************************************************************************************************/
 /*************************************************************************************************/
+#if MCU == STM32F103
+void exti15_10_isr(void) // PC2 and PC3 - It works like interrupt on change of each one of Y connected pins
+{
+	volatile uint16_t msx_Y_scan;
+
+	//Debug & performance measurement
+	gpio_clear(Dbg_Yint_PORT, Dbg_Yint2e3_PIN); //Signs start of interruption
+
+	// Read the MSX keyboard Y scan through GPIO pins A12:A8, mask to 0 other bits and rotate right 8
+	msx_Y_scan = (gpio_port_read(GPIOA)>>8) & 0x0F;
+	
+	GPIOB_BSRR = x_bits[msx_Y_scan]; //Atomic GPIOB update => Release and press MSX keys for this column
+
+	//Debug & performance measurement
+	gpio_set(Dbg_Yint_PORT, Dbg_Yint2e3_PIN); //Signs end of interruption. Default condition is "1"
+    
+	// Clear interrupt Y Scan flags, including those not used on this ISR
+	// if(exti_get_flag_status(EXTI7), (EXTI6), (EXTI4) and (EXTI3))
+	exti_reset_request(Y0_exti | Y1_exti | Y2_exti | Y3_exti);
+    
+	//Update systicks (time stamp) for this Y
+	previous_y_systick[msx_Y_scan]  = systicks;
+}
+
+void exti9_5_isr(void) // PC0 and PC1 - It works like interrupt on change of each one of Y connected pins
+{
+	volatile uint16_t msx_Y_scan;
+
+	//Debug & performance measurement
+	gpio_clear(Dbg_Yint_PORT, Dbg_Yint0e1_PIN); //Signs start of interruption
+
+	// Read the MSX keyboard Y scan through GPIO pins A12:A8, mask to 0 other bits and rotate right 8 and 9
+	msx_Y_scan = (gpio_port_read(GPIOA)) & Y_MASK;
+	msx_Y_scan = ((msx_Y_scan >> 8) & 0x3) | ((msx_Y_scan >> 9) & 0xC);
+
+	/*//Port A10 broken => Using B4 instead
+	if (gpio_get(Y2_port, Y2_PIN))
+		msx_Y_scan |= 0b0100;
+	else
+		msx_Y_scan &= ~0b0100;*/
+	
+	GPIOB_BSRR = x_bits[msx_Y_scan]; //Atomic GPIOB update => Release and press MSX keys for this column
+
+	//Debug & performance measurement
+	gpio_set(Dbg_Yint_PORT, Dbg_Yint0e1_PIN); //Signs end of interruption. Default condition is "1"
+
+	// Clear interrupt Y Scan flags, including those not used on this ISR
+	// if(exti_get_flag_status(EXTI7), (EXTI6), (EXTI4) and (EXTI3))
+	exti_reset_request(Y0_exti | Y1_exti | Y2_exti | Y3_exti);
+    
+	//Update systicks (time stamp) for this Y
+	previous_y_systick[msx_Y_scan]  = systicks;
+}
+
+
+#if MCU == STM32F401
 void exti9_5_isr(void) // PC3, PC2, PC1 and PC0 - This ISR works like interrupt on change of each one of Y connected pins
 {
 	volatile uint16_t msx_Y_scan;
 
 	//Debug & performance measurement
-	//gpio_clear(Dbg_Yint_port, Dbg_Yint0e1_pin_id); //Signs start of interruption. This line is useful only to measure performance, ie, only in development phase
-	GPIO_BSRR(Dbg_Yint_port) = Dbg_Yint_pin_id << 16;
+	//gpio_clear(Dbg_Yint_PORT, Dbg_Yint0e1_PIN); //Signs start of interruption. This line is useful only to measure performance, ie, only in development phase
+	GPIO_BSRR(Dbg_Yint_PORT) = Dbg_Yint_PIN << 16;
 
-	// Read the MSX keyboard Y scan through GPIO pins A5:A8, mask to 0 other bits and rotate right 5
-	//msx_Y_scan = Y_XLAT_TABLE[(gpio_port_read(Y0_port) & Y_MASK) >> 5];
-	msx_Y_scan = (gpio_port_read(Y0_port) & Y_MASK) >> 5;
-
- 	GPIO_BSRR(X_port) = x_bits[msx_Y_scan]; //Atomic GPIOB update => Release and press MSX keys for this column. This ends time criticity.
+	// Read the MSX keyboard Y scan through GPIO pins A12:A8, mask to 0 other bits and rotate right 8 and 9
+	msx_Y_scan = (gpio_port_read(Y0_PORT) & Y_MASK) >> 5;
+	
+	if(Y_XLAT_TABLE[y_local] == msx_Y_scan)
+		GPIO_BSRR(X_PORT) = x_bits[msx_Y_scan]; //Atomic GPIOB update => Release and press MSX keys for this column
 
 	//Debug & performance measurement
-	//gpio_set(Dbg_Yint_port, Dbg_Yint_pin_id); //Signs end of interruption. Default condition is "1". This line is useful only to measure performance, ie, only in development phase
-	GPIO_BSRR(Dbg_Yint_port) = Dbg_Yint_pin_id;
+	//gpio_set(Dbg_Yint_PORT, Dbg_Yint_PIN); //Signs end of interruption. Default condition is "1". This line is useful only to measure performance, ie, only in development phase
+	GPIO_BSRR(Dbg_Yint_PORT) = Dbg_Yint_PIN;
 
 	// Clear interrupt Y Scan flags
 	exti_reset_request(Y0_exti | Y1_exti | Y2_exti | Y3_exti);
@@ -952,3 +1028,34 @@ void exti9_5_isr(void) // PC3, PC2, PC1 and PC0 - This ISR works like interrupt 
 	//Update systicks (time stamp) for this Y
 	previous_y_systick[msx_Y_scan] = systicks;
 }
+#endif	//#if MCU == STM32F401
+
+
+/*void exti4_isr(void)	//Port A10 broken => Using B4 instead
+{
+	//Debug & performance measurement
+	gpio_clear(Dbg_Yint_port, Dbg_Yint2e3_PIN); //Signs start of interruption
+
+	// Read the MSX keyboard Y scan through GPIO pins A11:A8, mask to 0 other bits and rotate right 8
+	msx_Y_scan = (gpio_port_read(GPIOA)>>8) & 0x0F;
+	
+	//Port A10 broken => Using B4 instead
+	if (gpio_get(Y2_port, Y2_PIN))
+		msx_Y_scan |= 0b0100;
+	else
+		msx_Y_scan &= ~0b0100;
+	
+	GPIOB_BSRR = x_bits[msx_Y_scan]; //Atomic GPIOB update => Release and press MSX keys for this column
+
+	//Debug & performance measurement
+	gpio_set(Dbg_Yint_port, Dbg_Yint2e3_PIN); //Signs end of interruption. Default condition is "1"
+    
+	// Clear interrupt Y Scan flags, including those not used on this ISR
+	// if(exti_get_flag_status(EXTI7), (EXTI6), (EXTI4) and (EXTI3))
+	exti_reset_request(Y0_exti | Y1_exti | Y2_exti | Y3_exti);
+    
+	//Update systicks (time stamp) for this Y
+	previous_y_systick[msx_Y_scan]  = systicks;
+
+}*/
+#endif	//#if MCU == STM32F103

@@ -1,67 +1,106 @@
-#pragma once
+/*
+ * This file is part of the MSX Keyboard Subsystem Emulator project.
+ *
+ * Copyright (C) 2022 Evandro Souza <evandro.r.souza@gmail.com>
+ *
+ * This library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+//Use Tab width=2
+
+#if !defined SERIAL_H
+#define SERIAL_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <stdbool.h>
+#include <libopencm3/stm32/dma.h>
+#include <libopencm3/cm3/nvic.h>
+#include <libopencm3/stm32/usart.h>
+#include <libopencm3/usb/cdc.h>
 
-struct ring
+#include "system.h"
+
+
+struct sring
 {
 	uint8_t *data;
+	uint16_t bufSzMask;
 	uint16_t put_ptr;
 	uint16_t get_ptr;
 };
 
+#define X_ON								17
+#define X_OFF 							19
 
-//Setup ring
-void ring_init(struct ring *ring, uint8_t *buf);
 
-//Setup serial subsystem
-void uart_setup(void);
+void serial_setup(void);
 
-//Returns the number of chars available in the ring (both TX and RX) or 0 if none.
-uint16_t ring_avail_get_ch(struct ring*);
+void serial_rx_start(void);
 
-//It returns char when it is available or 0xFFFF when no one is available
-//Used on both TX and RX buffers.
-uint16_t ring_get_ch(struct ring *ring, uint16_t *qty_in_buffer);
+void usart_update_comm_param(struct usb_cdc_line_coding*);
 
-//It returns char when it is available or -1 when no one is available
-//Used only on RX buffer.
-uint8_t ring_rx_get_ch(void);
+void ring_init(struct sring*, uint8_t*, uint16_t);
 
-//It is used to put a char in the ring buffer, both TX and RX.
-//It returns number of chars are in the buffer, or 0 when there was no room to put this char.
-// It is a non blocking function
-uint16_t ring_put_ch(struct ring*, uint8_t);
+void pascal_string_init(struct s_pascal_string*, uint8_t*, uint8_t);
+
+void do_dma_usart_tx_ring(uint16_t number_of_data);
+
+// Append an ASCIIZ (uint8_t) string at the end of s_pascal_string buffer.
+void string_append(uint8_t*, struct s_pascal_string*);
 
 // Put a char (uint8_t) on serial buffer.
-// It returns the number of chars, or 0 (zero) if there was no room to put this on USART TX buffer.
-// It is a non blocking function
-uint16_t console_put_char(uint8_t);
+// They return number of chars are in the buffer or 0xFFFF when there was no room to add this char.
+// They are non blocking functions
+uint16_t ring_put_ch(struct sring*, uint8_t);
 
-// It returns the number of available chars in USART RX ring (0 or false if none).
-// It is a non blocking function
-uint16_t console_available_get_char(void);
-
-// If there is an available char in serial, it returns with an uint8_t.
-// It is a non blocking function
-uint8_t console_get_char(uint16_t*);
-
-//It is used to put a char in the ring TX buffer, as it will initiate TX if the first one is put on buffer.
-//It returns number of chars are in the buffer of 0 when there was no room to add this char.
-uint16_t ring_tx_put_ch(uint8_t ch);
+//It is used to start a usart transmission, of not started, fill DMA if it is idle, and fill the excedent characters in the ring TX buffer,
+//It returns the number of put_in_uart_tx bytes.
+//It also returns the number of bytes are in the uart_tx_ring in the address of the third parameter.
+uint16_t uart_tx_ring_dma_send_buf(uint8_t*, uint16_t, uint16_t*);
 
 // Send a ASCIIZ string to serial (up to 127 chars).
-// It is a non blocking function if there is room on TX Buffer
-void console_send_string(uint8_t*);
+// It is a non blocking function while there is room on TX Buffer
+void con_send_string(uint8_t*);
 
-//Wait until the transmission is concluded
-void serial_wait_tx_ends(void);
+// If there is an available char in choosen RX ring, it returns true.
+// They are non blocking functions
+uint16_t ring_avail_get_ch(struct sring*);
+uint16_t con_available_get_char(void);
+
+// If there is an available char in serial, it returns with an uint8_t, but
+// before, you have to use con_available_get_char or ring_avail_get_ch to check their availability.
+// They are non blocking functions.
+uint8_t ring_get_ch(struct sring*, uint16_t*);
+uint8_t con_get_char(void);
+
+// Read a line from console. You can limit how many chars will be available to enter.
+// It returns how many chars were read.
+// It is a blocking function
+uint8_t console_get_line(uint8_t*, uint16_t);
+
+//Force next console reading ch
+void insert_in_con_rx(uint8_t);
+
+/* To be used with printf */
+int _write(int, char*, int);
 
 /*Functions to convert strings*/
+// Convert a word (32 bit) into a up to 8 char string.
+void conv_uint32_to_dec(uint32_t, uint8_t*);
+
 // Convert a two byte string pointed by i into a binary byte. 
 uint8_t conv_2a_hex_to_uint8(uint8_t*, int16_t);
 
@@ -74,9 +113,13 @@ void conv_uint16_to_4a_hex(uint16_t, uint8_t*);
 // Convert a byte (8 bit binary) to into a 2 char string. 
 void conv_uint8_to_2a_hex(uint8_t, uint8_t*);
 
-// Convert a word (32 bit binary) to into a 10 char string. 
-void conv_uint32_to_dec(uint32_t, uint8_t*);
+// Convert a half-word (16 bit binary) to into a 5 char dec string. 
+void conv_uint16_to_dec(uint16_t, uint8_t*);
+
+
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif	//#ifndef SERIAL_H

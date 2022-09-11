@@ -1,7 +1,8 @@
 /*
- * This file is part of the PS/2 Keyboard Adapter for MSX, using libopencm3 project.
+ * This file is part of the PS/2 to MSX keyboard Converter and 
+ * MSX Keyboard Subsystem Emulator projects, using libopencm3 project.
  *
- * Copyright (C) 2021 Evandro Souza <evandro.r.souza@gmail.com>
+ * Copyright (C) 2022 Evandro Souza <evandro.r.souza@gmail.com>
  *
  * This original SW is compiled to a Sharp/Epcom MSX HB-8000 and a brazilian ABNT2 PS/2 keyboard (ID=275)
  * But it is possible to update the table sending a Intel Hex File through serial or USB
@@ -28,6 +29,7 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/exti.h>
 #include <libopencm3/stm32/timer.h>
+#include <libopencm3/cm3/scb.h>
 
 #include "serial.h"
 #include "ps2handl.h"
@@ -64,7 +66,6 @@ enum ps2int{
 
 
 //Global Vars
-bool update_ps2_leds;
 volatile uint16_t ps2int_state;
 volatile uint8_t ps2int_TX_bit_idx;
 volatile uint8_t ps2int_RX_bit_idx;
@@ -81,7 +82,7 @@ extern  uint32_t formerscancode;									//declared on msxmap.cpp
 extern uint8_t scancode[4];												//declared on msxmap.cpp
 extern uint64_t time_between_ps2clk;							//Declared on hr_timer_delay.c
 extern uint16_t fail_count;												//declared on msxhid.cpp
-volatile bool formerps2datapin;
+volatile bool formerps2datapin, update_ps2_leds;
 volatile bool ps2_keyb_detected, ps2numlockstate;
 volatile bool command_ok, echo_received;
 bool caps_state, kana_state;
@@ -109,16 +110,17 @@ void ps2_clock_receive(bool);
 void ps2_send_command(uint8_t, uint8_t);
 void reset_mount_scancode_machine(void);
 
+extern char _ebss[];
+
 
 //Power on PS/2 Keyboard and related pins setup
 void power_on_ps2_keyboard()
 {
 	//PS/2 power control pin
-#if MCU == STM32F103C8
+#if MCU == STM32F103
 	gpio_set_mode(PS2_POWER_CTR_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, PS2_POWER_CTR_PIN);
-	gpio_set(PS2_POWER_CTR_PORT, PS2_POWER_CTR_PIN);
 #endif
-#if MCU == STM32F401CC
+#if MCU == STM32F401
 	gpio_set_af(PS2_POWER_CTR_PORT, GPIO_AF1, PS2_POWER_CTR_PIN);	//Set Alternate function
 	gpio_mode_setup(PS2_POWER_CTR_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, PS2_POWER_CTR_PIN);
 	gpio_set_output_options(PS2_POWER_CTR_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, PS2_POWER_CTR_PIN);
@@ -127,45 +129,45 @@ void power_on_ps2_keyboard()
 	gpio_set(PS2_POWER_CTR_PORT, PS2_POWER_CTR_PIN);	//Turn on PS/2 Keyboard
 
 	// PS/2 keyboard Clock and Data pins
-#if MCU == STM32F103C8
-	gpio_set(PS2_CLOCK_PIN_PORT, PS2_CLOCK_PIN_ID); //Hi-Z
-	gpio_set_mode(PS2_CLOCK_PIN_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_OPENDRAIN, PS2_CLOCK_PIN_ID);
-	gpio_port_config_lock(PS2_CLOCK_PIN_PORT, PS2_CLOCK_PIN_ID);
+#if MCU == STM32F103
+	gpio_set(PS2_CLOCK_PORT, PS2_CLOCK_PIN); //Hi-Z
+	gpio_set_mode(PS2_CLOCK_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_OPENDRAIN, PS2_CLOCK_PIN);
+	gpio_port_config_lock(PS2_CLOCK_PORT, PS2_CLOCK_PIN);
 #endif
-#if MCU == STM32F401CC
-	//gpio_set_af(PS2_CLOCK_PIN_PORT, GPIO_AF1, PS2_CLOCK_PIN_ID);	//Set Alternate function
-	gpio_set(PS2_CLOCK_PIN_PORT, PS2_CLOCK_PIN_ID); //Hi-Z
-	gpio_set_output_options(PS2_CLOCK_PIN_PORT, GPIO_OTYPE_OD, GPIO_OSPEED_100MHZ, PS2_CLOCK_PIN_ID);
-	gpio_mode_setup(PS2_CLOCK_PIN_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, PS2_CLOCK_PIN_ID);
+#if MCU == STM32F401
+	//gpio_set_af(PS2_CLOCK_PORT, GPIO_AF1, PS2_CLOCK_PIN);	//Set Alternate function
+	gpio_set(PS2_CLOCK_PORT, PS2_CLOCK_PIN); //Hi-Z
+	gpio_set_output_options(PS2_CLOCK_PORT, GPIO_OTYPE_OD, GPIO_OSPEED_100MHZ, PS2_CLOCK_PIN);
+	gpio_mode_setup(PS2_CLOCK_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, PS2_CLOCK_PIN);
 #if PS2_CLK_INTERRUPT == GPIO_INT
-	exti_select_source(PS2_CLOCK_PIN_EXTI, PS2_CLOCK_PIN_PORT);
-	exti_set_trigger(PS2_CLOCK_PIN_EXTI, EXTI_TRIGGER_FALLING);
-	exti_reset_request(PS2_CLOCK_PIN_EXTI);
-	exti_enable_request(PS2_CLOCK_PIN_EXTI);
+	exti_select_source(PS2_CLOCK_EXTI, PS2_CLOCK_PORT);
+	exti_set_trigger(PS2_CLOCK_EXTI, EXTI_TRIGGER_FALLING);
+	exti_reset_request(PS2_CLOCK_EXTI);
+	exti_enable_request(PS2_CLOCK_EXTI);
 #endif //#if PS2_CLK_INTERRUPT == GPIO_INT
-	gpio_port_config_lock(PS2_CLOCK_PIN_PORT, PS2_CLOCK_PIN_ID);
+	gpio_port_config_lock(PS2_CLOCK_PORT, PS2_CLOCK_PIN);
 #endif
 
 	// PS/2 keyboard Data pin
-#if MCU == STM32F103C8
-	gpio_set(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);		//Hi-Z
-	gpio_set_mode(PS2_DATA_PIN_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_OPENDRAIN, PS2_DATA_PIN_ID);
-	gpio_port_config_lock(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);
+#if MCU == STM32F103
+	gpio_set(PS2_DATA_PORT, PS2_DATA_PIN);											//Hi-Z
+	gpio_set_mode(PS2_DATA_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_OPENDRAIN, PS2_DATA_PIN);
+	gpio_port_config_lock(PS2_DATA_PORT, PS2_DATA_PIN);
 #endif
-#if MCU == STM32F401CC
-	gpio_set_af(PS2_DATA_PIN_PORT, GPIO_AF1, PS2_DATA_PIN_ID);	//Set Alternate function
-	gpio_set(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);		//Hi-Z
-	gpio_mode_setup(PS2_DATA_PIN_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, PS2_DATA_PIN_ID);
-	gpio_set_output_options(PS2_DATA_PIN_PORT, GPIO_OTYPE_OD, GPIO_OSPEED_25MHZ, PS2_DATA_PIN_ID);
-	gpio_port_config_lock(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);
+#if MCU == STM32F401
+	gpio_set_af(PS2_DATA_PORT, GPIO_AF1, PS2_DATA_PIN);	//Set Alternate function
+	gpio_set(PS2_DATA_PORT, PS2_DATA_PIN);		//Hi-Z
+	gpio_mode_setup(PS2_DATA_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, PS2_DATA_PIN);
+	gpio_set_output_options(PS2_DATA_PORT, GPIO_OTYPE_OD, GPIO_OSPEED_25MHZ, PS2_DATA_PIN);
+	gpio_port_config_lock(PS2_DATA_PORT, PS2_DATA_PIN);
 #endif
 
 #if PS2_CLK_INTERRUPT == GPIO_INT
 	// Enable EXTI15_10 interrupt.
-	nvic_enable_irq(NVIC_EXTI15_10_IRQ);
+	nvic_enable_irq(IRQ_PRI_TIM_HR);
 
 	//High priority to avoid PS/2 interrupt loss
-	nvic_set_priority(NVIC_EXTI15_10_IRQ, IRQ_PRI_PS2_CLOCK);
+	nvic_set_priority(NVIC_EXTI15_10_IRQ, IRQ_PRI_TIM_HR);
 #endif //#if PS2_CLK_INTERRUPT == GPIO_INT
 
 	//Starts with RX state: PS2INT_RECEIVE
@@ -206,7 +208,7 @@ bool keyboard_check_alive(void)
 void power_off_ps2_keyboard()
 {
 	gpio_clear(PS2_POWER_CTR_PORT, PS2_POWER_CTR_PIN);
-	console_send_string((uint8_t*)"\r\nPS/2 interface powered down.\r\n\n");
+	con_send_string((uint8_t*)"\r\nPS/2 interface powered down.\r\n\n");
 }
 
 
@@ -256,25 +258,45 @@ uint8_t get_ps2_byte(volatile uint8_t *buff)
 bool ps2_keyb_detect(void)
 {
 	uint32_t systicks_start_command;	//Initial time mark
-	uint8_t mountstring[16];					//Used in console_send_string()
+	uint8_t mountstring[16];					//Used in con_send_string()
 	uint8_t ch;
-	uint16_t qty_in_buffer;
-	serial_wait_tx_ends();
+	//uint16_t qty_in_buffer;
+	/*serial_wait_tx_ends();*/
 
 	//Clean RX serial buffer to not false glitch database_setup
-	while (console_available_get_char())
-		ch = console_get_char(&qty_in_buffer);
+	while (con_available_get_char())
+		ch = con_get_char();
 	ch&= 0xFF;	//only to avoid unused variable warning.
 
 	//Wait for 2.5s to keyboard execute its own power on and BAT (Basic Assurance Test) procedure
 	systicks_start_command = systicks;
+	prev_systicks = systicks;
 	ps2_keyb_detected = false;
+	uint16_t localcount = 0;
 	while ( ((systicks-systicks_start_command) < (25*3)) && (!available_ps2_byte()) )	//Wait 2500ms for keyboard power on
+	{
+		if(prev_systicks != systicks)
+		{//systicks updated. Each 15 ticks is a "#"  |.....|
+			if((systicks - systicks_start_command - localcount) > 14)
+			{
+				localcount = systicks - systicks_start_command;
+				con_send_string((uint8_t*)"\r  to proceed BAT: |");
+				for(uint16_t i = 0; i < (uint8_t)(localcount / 15); i++)
+					con_send_string((uint8_t*)"#");
+			}
+		}
 		prev_systicks = systicks;	//To avoid errors on keyboard power up BEFORE the first access
+	}
+	//Fill bar graph
+	localcount = systicks - systicks_start_command;
+	con_send_string((uint8_t*)"\r  to proceed BAT: |");
+	for(uint16_t i = 0; i < (uint8_t)(localcount / 15); i++)
+		con_send_string((uint8_t*)"#");
+
 	if ((systicks-systicks_start_command) >= (25*3))
 	{
 		//User messages
-		console_send_string((uint8_t*)"..  Timeout on BAT: No keyboard!\r\n");
+ 		con_send_string((uint8_t*)"\r\n..  Timeout on BAT: No keyboard!\r\n");
 		return ps2_keyb_detected;
 	}
 	//PS/2 keyboard might already sent its BAT result. Check it:
@@ -284,24 +306,24 @@ bool ps2_keyb_detect(void)
 		if(ps2_byte_received == KB_SUCCESSFULL_BAT)
 		{
 			//User messages
-			console_send_string((uint8_t*)"..  BAT (Basic Assurance Test) OK in ");
+			con_send_string((uint8_t*)"\r\n..  BAT (Basic Assurance Test) OK in ");
 			conv_uint32_to_dec((prev_systicks - systicks_start_command), &mountstring[0]);
-			console_send_string((uint8_t*)&mountstring[0]);
-			console_send_string((uint8_t*)" ticks;\r\n");
+			con_send_string((uint8_t*)&mountstring[0]);
+			con_send_string((uint8_t*)" ticks;\r\n");
 		}
 		else
 		{
 			//User messages
-			console_send_string((uint8_t*)"..  BAT not OK: Received 0x");
+			con_send_string((uint8_t*)"..  BAT not OK: Received 0x");
 			conv_uint8_to_2a_hex(ps2_byte_received, &mountstring[0]);
-			console_send_string((uint8_t*)&mountstring[0]);
-			console_send_string((uint8_t*)" instead of 0xAA\r\n");
+			con_send_string((uint8_t*)&mountstring[0]);
+			con_send_string((uint8_t*)" instead of 0xAA\r\n");
 		}
 	}
 	
 	//Send command Read ID. It musts responds with 0xFA (implicit), 0xAB, 0x83
 	// Wait clock line to be unactive for 100 ms (3 systicks)
-	//console_send_string((uint8_t*)"Sending Read ID comm\r\n");
+	//con_send_string((uint8_t*)"Sending Read ID comm\r\n");
 	systicks_start_command = systicks;
 	ps2_send_command(COMM_READ_ID, ARG_NO_ARG); //Read ID command.
 	while (!command_ok && (systicks - systicks_start_command)<(3*3)) //Must be excecuted in less than 100ms
@@ -314,14 +336,14 @@ bool ps2_keyb_detect(void)
 	}
 	if (command_ok)
 	{
-		//console_send_string((uint8_t*)"Waiting 0xAB\r\n");
+		//con_send_string((uint8_t*)"Waiting 0xAB\r\n");
 		systicks_start_command = systicks;
 		while(!available_ps2_byte()&& (systicks - systicks_start_command)<(1*3))
     __asm("nop");
 		ps2_byte_received = get_ps2_byte(&ps2_recv_buffer[0]);
 		if(ps2_byte_received == KB_FIRST_ID)
 		{
-			//console_send_string((uint8_t*)"Waiting 0x83\r\n");
+			//con_send_string((uint8_t*)"Waiting 0x83\r\n");
 			systicks_start_command = systicks;
 			while(!available_ps2_byte() && (systicks - systicks_start_command)<(1*3))
 			__asm("nop");
@@ -330,28 +352,28 @@ bool ps2_keyb_detect(void)
 			{
 				ps2_keyb_detected = true;
 				//User messages
-				console_send_string((uint8_t*)"..  PS/2 Keyboard detected;\r\n");
+				con_send_string((uint8_t*)"..  PS/2 Keyboard detected;\r\n");
 			}
 			else
 			{
-				//console_send_string((uint8_t*)"Did not receive 0x83");
-				console_send_string((uint8_t*)"..  PS/2 Keyboard not detected!\r\n");
+				//con_send_string((uint8_t*)"Did not receive 0x83");
+				con_send_string((uint8_t*)"..  PS/2 Keyboard not detected!\r\n");
 				return ps2_keyb_detected;
 			}
 		}
 		else
 		{
-			//console_send_string((uint8_t*)"Did not receive 0xAB");
+			//con_send_string((uint8_t*)"Did not receive 0xAB");
 			return ps2_keyb_detected;
 		}
 	}
 	else
 	{
 		//User messages
-		/*console_send_string((uint8_t*)"PS/2 ReadID command not OK. Elapsed time was ");
+		/*con_send_string((uint8_t*)"PS/2 ReadID command not OK. Elapsed time was ");
 		conv_uint32_to_8a_hex((systicks - systicks_start_command), &mountstring[0]);
-		console_send_string((uint8_t*)&mountstring[0]);
-		console_send_string((uint8_t*)"\r\n"); */
+		con_send_string((uint8_t*)&mountstring[0]);
+		con_send_string((uint8_t*)"\r\n"); */
 		return ps2_keyb_detected;
 	}
 
@@ -360,7 +382,7 @@ bool ps2_keyb_detect(void)
 	//  If it does not receive "ack" (0xFA), then send type 2 command 0xF3 + 0x7F (2cps repeat rate + 1 second delay)
 	//  It musts respond with an "ack" after the first byte, than with a second "ack" after the second byte.
 	//User messages
-	//console_send_string((uint8_t*)"Type 2 sets typematic repeat 0xF3 0x7F requested\r\n");
+	//con_send_string((uint8_t*)"Type 2 sets typematic repeat 0xF3 0x7F requested\r\n");
 	
 	//Type 2 command: Set typematic rate to 2 cps and delay to 1 second.
 	systicks_start_command = systicks;
@@ -370,12 +392,12 @@ bool ps2_keyb_detect(void)
 	if (command_ok)
 	{
 		//User messages
-		console_send_string((uint8_t*)"..  Delay 1 second to repeat, 2cps repeat rate (Type 2 command) OK;\r\n");
+		con_send_string((uint8_t*)"..  Delay 1 second to repeat, 2cps repeat rate (Type 2 command) OK;\r\n");
 	}
 	else
 	{
 		//User messages
-		console_send_string((uint8_t*)"..  Type 3 Disables typematic repeat 0xFA requested\r\n");
+		con_send_string((uint8_t*)"..  Type 3 Disables typematic repeat 0xFA requested\r\n");
 
 		//.1 second delay (to display serial contents) ONLY TO DEBUG
 		systicks_start_command = systicks;
@@ -390,7 +412,7 @@ bool ps2_keyb_detect(void)
 		if (command_ok)
 		{
 			//User messages
-			console_send_string((uint8_t*)"..  Type 3 Disables typematic 0xFA repeat OK\r\n");
+			con_send_string((uint8_t*)"..  Type 3 Disables typematic 0xFA repeat OK\r\n");
 		}
 	}
 	return ps2_keyb_detected;
@@ -405,6 +427,12 @@ void reset_requested(void)
 	//wait 1/3 second
 	while (systicks <= (readsysticks + 10)) __asm("nop");
 	systick_interrupt_disable();
+#if MCU == STM32F401
+	uint32_t *magic = (uint32_t *)&_ebss;
+	magic[0] = BOOTMAGIC0;
+	magic[1] = BOOTMAGIC1;
+#endif	//#if MCU ==STM32F401
+	scb_reset_system();
 	for(;;) {};//Wait here until reset
 }
 
@@ -414,7 +442,7 @@ void reset_requested(void)
 
 void ps2_send_command(uint8_t cmd, uint8_t argm)
 {
-	uint8_t mountstring[16];					//Used in console_send_string()
+	uint8_t mountstring[16];					//Used in con_send_string()
 	/*uint32_t systicks_start_command;	//Initial time mark
 
 	systicks_start_command = systicks;
@@ -423,10 +451,10 @@ void ps2_send_command(uint8_t cmd, uint8_t argm)
 	if(ps2int_state != PS2INT_RECEIVE)
 	{
 		//User messages
-		console_send_string((uint8_t*)"0x");
+		con_send_string((uint8_t*)"0x");
 		conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-		console_send_string((uint8_t*)&mountstring[0]);
-		console_send_string((uint8_t*)", instead of 0x0400\r\n");
+		con_send_string((uint8_t*)&mountstring[0]);
+		con_send_string((uint8_t*)", instead of 0x0400\r\n");
 	}
 	command =  cmd;
 	argument = argm;
@@ -437,15 +465,15 @@ void ps2_send_command(uint8_t cmd, uint8_t argm)
 
 void ps2_update_leds(bool num, bool caps, bool scroll)
 {
-	uint8_t mountstring[16];					//Used in console_send_string()
+	uint8_t mountstring[16];					//Used in con_send_string()
 
 	if(ps2int_state != PS2INT_RECEIVE)
 	{
 		//User messages
-		console_send_string((uint8_t*)"0x");
+		con_send_string((uint8_t*)"0x");
 		conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-		console_send_string((uint8_t*)&mountstring[0]);
-		console_send_string((uint8_t*)", instead of 0x0400\r\n");
+		con_send_string((uint8_t*)&mountstring[0]);
+		con_send_string((uint8_t*)", instead of 0x0400\r\n");
 	}
 	command = COMM_SET_RESET_LEDS;
 	argument = (scroll<<0)|(num<<1)|(caps<<2);
@@ -457,33 +485,33 @@ void ps2_update_leds(bool num, bool caps, bool scroll)
 //Insert a delay before run send_start_bit_now()
 void send_start_bit_next(uint16_t x_usec)
 {
-	delay_usec(TIM_HR_TIMER, x_usec, send_start_bit_now); //wait x_usec and go to send_start_bit on TIM_HR_TIMER overflow interrupt
+	delay_usec(TIM_HR, x_usec, send_start_bit_now); //wait x_usec and go to send_start_bit on TIM_HR_TIMER overflow interrupt
 }
 
 
 //This three functions are the split of Transmit Initiator, to avoid stuck inside an interrupt due to 120u and 20usec
 void send_start_bit_now(void)
 {
-	timer_disable_irq(TIM_HR_TIMER, TIM_DIER_CC1IE);	// Disable interrupt on Capture/Compare1, but keeps on overflow
+	timer_disable_irq(TIM_HR, TIM_DIER_CC1IE);	// Disable interrupt on Capture/Compare1, but keeps on overflow
 #if PS2_CLK_INTERRUPT == GPIO_INT
-	exti_disable_request(PS2_CLOCK_PIN_EXTI);
+	exti_disable_request(PS2_CLOCK_EXTI);
 #endif	
 	command_ok = false; //Here command_OK is initialized
-	gpio_set(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);
-	gpio_clear(PS2_CLOCK_PIN_PORT, PS2_CLOCK_PIN_ID);
+	gpio_set(PS2_DATA_PORT, PS2_DATA_PIN);
+	gpio_clear(PS2_CLOCK_PORT, PS2_CLOCK_PIN);
 	//if keyboard interrupt was not disabled, it would be interrupted here, pointing to something not coded
 	//Something was wrong with original delay, so I decided to use TIM_HR_TIMER Capture/Compare interrupt
 	// See hr_timer_delay.c file
 	//now insert a 120us delay and run step 2 of send_start_bit function
-	delay_usec(TIM_HR_TIMER, 120, send_start_bit2); //wait 120usec and go to send_start_bit2 on TIM_HR_TIMER overflow interrupt
+	delay_usec(TIM_HR, 120, send_start_bit2); //wait 120usec and go to send_start_bit2 on TIM_HR_TIMER overflow interrupt
 }
 
 
 void send_start_bit2(void) //Second part of send_start_bit
 {
-	gpio_clear(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID); //this is the start bit
+	gpio_clear(PS2_DATA_PORT, PS2_DATA_PIN); //this is the start bit
 	//now insert a 10us delay and run step 3 of send_start_bit function
-	delay_usec(TIM_HR_TIMER, 10, send_start_bit3); /*wait 10usec and go to send_start_bit3 on TIM_HR_TIMER overflow interrupt*/
+	delay_usec(TIM_HR, 10, send_start_bit3); /*wait 10usec and go to send_start_bit3 on TIM_HR_TIMER overflow interrupt*/
 }
 
 
@@ -491,14 +519,14 @@ void send_start_bit3(void) //Third part of send_start_bit
 {
 	ps2int_prev_systicks = systicks;
 	//Rise clock edge starts the PS/2 device to receive command/argument
-	gpio_set(PS2_CLOCK_PIN_PORT, PS2_CLOCK_PIN_ID);
+	gpio_set(PS2_CLOCK_PORT, PS2_CLOCK_PIN);
 
 	ps2int_TX_bit_idx = 0;	// In TX Int, as we don't manage start bit inside int, idx can start with 0.
 
-	prepares_capture(TIM_HR_TIMER);
+	prepares_capture(TIM_HR);
 #if PS2_CLK_INTERRUPT == GPIO_INT
-	exti_reset_request(PS2_CLOCK_PIN_EXTI);
-	exti_enable_request(PS2_CLOCK_PIN_EXTI);
+	exti_reset_request(PS2_CLOCK_EXTI);
+	exti_enable_request(PS2_CLOCK_EXTI);
 #endif	
 }
 
@@ -515,7 +543,7 @@ void ps2_clock_update(bool ps2datapin_logicstate)
 		acctimeps2data0 += time_between_ps2clk;
 		if (acctimeps2data0 >= 200000) //.2s
 		{
-			gpio_set(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);
+			gpio_set(PS2_DATA_PORT, PS2_DATA_PIN);
 			ps2int_state = PS2INT_RECEIVE;
 			ps2int_RX_bit_idx = 0;
 		}
@@ -523,25 +551,25 @@ void ps2_clock_update(bool ps2datapin_logicstate)
 	else
 		acctimeps2data0 = 0;		//Reset acc time counter
 	formerps2datapin = ps2datapin_logicstate;	//To compare at next bit
-	uint8_t mountstring[16]; //Used in console_send_string()
+	uint8_t mountstring[16]; //Used in con_send_string()
 	/*Any keyboard interrupt that comes after 900 micro seconds means an error condition,
 	but I`m considering it as an error for about 100 ms, to acommodate this to power on, to answer 
 	to Read ID command. I observed this behavior on my own PS/2 keyboard. It is huge!*/
 	if( ((ps2int_state == PS2INT_SEND_COMMAND) || (ps2int_state == PS2INT_SEND_ARGUMENT))
 				&& ((ps2int_TX_bit_idx != 0) && (systicks - ps2int_prev_systicks) > 1) )
 	{	//reset to PS/2 receive condition
-		gpio_set(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);
+		gpio_set(PS2_DATA_PORT, PS2_DATA_PIN);
 		//User messages (debug)
-		console_send_string((uint8_t*)"ps2_clock_sent reseted - Timeout = ");
+		con_send_string((uint8_t*)"ps2_clock_sent reseted - Timeout = ");
 		conv_uint32_to_dec((systicks - ps2int_prev_systicks), &mountstring[0]);
-		console_send_string((uint8_t*)&mountstring[0]);
-		console_send_string((uint8_t*)", ps2int_TX_bit_idx = ");
+		con_send_string((uint8_t*)&mountstring[0]);
+		con_send_string((uint8_t*)", ps2int_TX_bit_idx = ");
 		conv_uint32_to_dec((uint32_t)ps2int_TX_bit_idx, &mountstring[0]);
-		console_send_string((uint8_t*)&mountstring[0]);
-		console_send_string((uint8_t*)", ");
+		con_send_string((uint8_t*)&mountstring[0]);
+		con_send_string((uint8_t*)", ");
 		conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-		console_send_string((uint8_t*)&mountstring[0]);
-		console_send_string((uint8_t*)";\r\n");
+		con_send_string((uint8_t*)&mountstring[0]);
+		con_send_string((uint8_t*)";\r\n");
 		ps2int_state = PS2INT_RECEIVE;
 		ps2int_RX_bit_idx = 0;
 	}
@@ -559,12 +587,12 @@ void ps2_clock_update(bool ps2datapin_logicstate)
 
 void ps2_clock_send(bool ps2datapin_logicstate)
 {
-	uint8_t mountstring[16]; //Used in console_send_string()
+	uint8_t mountstring[16]; //Used in con_send_string()
 	ps2int_prev_systicks = systicks;
 	//Time check - The same for all bits
 	if (time_between_ps2clk > 10000) // time >10ms
 	{
-		console_send_string((uint8_t*)"Time > 10ms on TX");
+		con_send_string((uint8_t*)"Time > 10ms on TX");
 	}
 	//|variável| = `if`(condição) ? <valor1 se true> : <valor2 se false>;:
 	//Only two TX states of send: ps2_send_command & send_argument
@@ -575,48 +603,48 @@ void ps2_clock_send(bool ps2datapin_logicstate)
 		bool bit = data_byte & (1 << (ps2int_TX_bit_idx));
 		ps2int_TX_bit_idx++;
 			//User messages (debug)
-			/*console_send_string((uint8_t*)"sent bit #");
+			/*con_send_string((uint8_t*)"sent bit #");
 			conv_uint32_to_dec((uint32_t)ps2int_TX_bit_idx-1, &mountstring[0]);
-			console_send_string((uint8_t*)&mountstring[0]);
-			console_send_string((uint8_t*)": ");*/
+			con_send_string((uint8_t*)&mountstring[0]);
+			con_send_string((uint8_t*)": ");*/
 		if(bit)
 		{
-			gpio_set(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);
+			gpio_set(PS2_DATA_PORT, PS2_DATA_PIN);
 			//User messages (debug)
-			/*console_send_string((uint8_t*)"1\r\n");*/
+			/*con_send_string((uint8_t*)"1\r\n");*/
 		}
 		else
 		{
-			gpio_clear(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);
+			gpio_clear(PS2_DATA_PORT, PS2_DATA_PIN);
 			//User messages (debug)
-			/*console_send_string((uint8_t*)"0\r\n");*/
+			/*con_send_string((uint8_t*)"0\r\n");*/
 		}
 	}
 	else if(ps2int_TX_bit_idx == 8)
 	{//parity
 		bool parity =! __builtin_parity(data_byte);
 		//User messages (debug)
-		//console_send_string((uint8_t*)"sent p: "); //This print continues below
+		//con_send_string((uint8_t*)"sent p: "); //This print continues below
 		if(parity)
 		{
-			gpio_set(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);
+			gpio_set(PS2_DATA_PORT, PS2_DATA_PIN);
 			//User messages (debug)
-			//console_send_string((uint8_t*)"1\r\n");
+			//con_send_string((uint8_t*)"1\r\n");
 		}
 		else
 		{
-			gpio_clear(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);
+			gpio_clear(PS2_DATA_PORT, PS2_DATA_PIN);
 			//User messages (debug)
-			//console_send_string((uint8_t*)"0\r\n");
+			//con_send_string((uint8_t*)"0\r\n");
 		}
 		ps2int_TX_bit_idx = 9;
 	}
 	else if(ps2int_TX_bit_idx == 9)
 	{//stop bit
-		gpio_set(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);
+		gpio_set(PS2_DATA_PORT, PS2_DATA_PIN);
 		ps2int_TX_bit_idx = 10;
 		//User messages (debug)
-		//console_send_string((uint8_t*)"sent stop\r\n");
+		//con_send_string((uint8_t*)"sent stop\r\n");
 	}
 	else if(ps2int_TX_bit_idx >= 10)
 	{
@@ -624,24 +652,24 @@ void ps2_clock_send(bool ps2datapin_logicstate)
 		{
 			//  ACK bit ok
 			//User messages (debug)
-			/*console_send_string((uint8_t*)"TX Data sent OK: 0x");
+			/*con_send_string((uint8_t*)"TX Data sent OK: 0x");
 			conv_uint8_to_2a_hex(data_byte, &mountstring[0]);
-			console_send_string((uint8_t*)&mountstring[0]);
-			console_send_string((uint8_t*)", 0x");
+			con_send_string((uint8_t*)&mountstring[0]);
+			con_send_string((uint8_t*)", 0x");
 			conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-			console_send_string((uint8_t*)&mountstring[0]);
-			console_send_string((uint8_t*)"\r\n");*/
+			con_send_string((uint8_t*)&mountstring[0]);
+			con_send_string((uint8_t*)"\r\n");*/
 			
 		}
 		else
 		{
 			// Ack bit NOT ok
-			gpio_set(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);	//To warranty that is not caused by let this pin LOW
+			gpio_set(PS2_DATA_PORT, PS2_DATA_PIN);	//To warranty that is not caused by let this pin LOW
 			//User messages (debug)
-			console_send_string((uint8_t*)"Trying to send 0x");
+			con_send_string((uint8_t*)"Trying to send 0x");
 			conv_uint8_to_2a_hex(data_byte, &mountstring[0]);
-			console_send_string((uint8_t*)&mountstring[0]);
-			console_send_string((uint8_t*)". ACK bit not received from keyboard\r\n");
+			con_send_string((uint8_t*)&mountstring[0]);
+			con_send_string((uint8_t*)". ACK bit not received from keyboard\r\n");
 			ps2int_state = PS2INT_RECEIVE; //force to receive_status in absence of something better
 			ps2int_RX_bit_idx = 0;
 		}
@@ -656,10 +684,10 @@ void ps2_clock_send(bool ps2datapin_logicstate)
 				ps2int_state = PS2INT_WAIT_FOR_COMMAND_ACK;
 				ps2int_RX_bit_idx =  0;
 				//User messages (debug)
-				/*console_send_string((uint8_t*)"TX: new 0x");
+				/*con_send_string((uint8_t*)"TX: new 0x");
 				conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-				console_send_string((uint8_t*)&mountstring[0]);
-				console_send_string((uint8_t*)"\r\n");*/
+				con_send_string((uint8_t*)&mountstring[0]);
+				con_send_string((uint8_t*)"\r\n");*/
 			}
 			else
 			{	//New state created to acomodate waiting for echo
@@ -672,21 +700,21 @@ void ps2_clock_send(bool ps2datapin_logicstate)
 			ps2int_state = PS2INT_WAIT_FOR_ARGUMENT_ACK;
 			ps2int_RX_bit_idx =  0;
 			//User messages (debug)
-			/*console_send_string((uint8_t*)"TX: new 0x");
+			/*con_send_string((uint8_t*)"TX: new 0x");
 			conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-			console_send_string((uint8_t*)&mountstring[0]);
-			console_send_string((uint8_t*)"\r\n");*/
+			con_send_string((uint8_t*)&mountstring[0]);
+			con_send_string((uint8_t*)"\r\n");*/
 		}
 		else
 		{
-			gpio_set(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);
+			gpio_set(PS2_DATA_PORT, PS2_DATA_PIN);
 			ps2int_state = PS2INT_RECEIVE;
 			ps2int_RX_bit_idx =  0;
 			//User messages (debug)
-			/*console_send_string((uint8_t*)"TX: new 0x");
+			/*con_send_string((uint8_t*)"TX: new 0x");
 			conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-			console_send_string((uint8_t*)&mountstring[0]);
-			console_send_string((uint8_t*)"\r\n");*/
+			con_send_string((uint8_t*)&mountstring[0]);
+			con_send_string((uint8_t*)"\r\n");*/
 		}
 	}
 }
@@ -695,12 +723,12 @@ void ps2_clock_send(bool ps2datapin_logicstate)
 void ps2_clock_receive(bool ps2datapin_logicstate)
 {
 	static uint8_t data_word, stop_bit, parity_bit;
-	uint8_t mountstring[16]; //Used in console_send_string()
+	uint8_t mountstring[16]; //Used in con_send_string()
 
 	//Verify RX timeout, that is quite restricted, if compared to Send Command/Argument
 	if ( (ps2int_RX_bit_idx != 0) && (time_between_ps2clk > 120) )  //because if RX_bit_idx == 0 will be the reset
 	{	
-		console_send_string((uint8_t*)"ps2_clock_receive - Timeout\r\n");
+		con_send_string((uint8_t*)"ps2_clock_receive - Timeout\r\n");
 		ps2int_RX_bit_idx = 0;
 	}
 	ps2int_prev_systicks = systicks;
@@ -708,12 +736,12 @@ void ps2_clock_receive(bool ps2datapin_logicstate)
 	if(ps2int_RX_bit_idx == 0)
 	{
 		//Force this interface to put data line in Hi-Z to avoid unspected behavior in case of errors
-		gpio_set(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);
+		gpio_set(PS2_DATA_PORT, PS2_DATA_PIN);
 		//User messages (debug)
-		//console_send_string((uint8_t*)"RX: ps2int_state = 0x");
+		//con_send_string((uint8_t*)"RX: ps2int_state = 0x");
 		//conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-		//console_send_string((uint8_t*)&mountstring[0]);
-		//console_send_string((uint8_t*)"\r\n");
+		//con_send_string((uint8_t*)&mountstring[0]);
+		//con_send_string((uint8_t*)"\r\n");
 		data_word = 0;
 		stop_bit = 0xff;
 		parity_bit = 0xff;
@@ -742,21 +770,21 @@ void ps2_clock_receive(bool ps2datapin_logicstate)
 		stop_bit = ps2datapin_logicstate;
 		bool parity_ok = __builtin_parity((data_word<<1)|parity_bit);
 		//User messages (debug)
-		/*console_send_string((uint8_t*)"RX Data: 0x");
+		/*con_send_string((uint8_t*)"RX Data: 0x");
 		conv_uint8_to_2a_hex(data_word, &mountstring[0]);
-		console_send_string((uint8_t*)&mountstring[0]);
+		con_send_string((uint8_t*)&mountstring[0]);
 		if(parity_ok)
-			console_send_string((uint8_t*)", pbit OK,");
+			con_send_string((uint8_t*)", pbit OK,");
 		else
-			console_send_string((uint8_t*)", pbit issue,");
+			con_send_string((uint8_t*)", pbit issue,");
 		if(stop_bit == 1)
-			console_send_string((uint8_t*)" sbit OK,");
+			con_send_string((uint8_t*)" sbit OK,");
 		else
-			console_send_string((uint8_t*)" sbit issue,");
-		console_send_string((uint8_t*)" 0x");
+			con_send_string((uint8_t*)" sbit issue,");
+		con_send_string((uint8_t*)" 0x");
 		conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-		console_send_string((uint8_t*)&mountstring[0]);
-		console_send_string((uint8_t*)"\r\n");*/
+		con_send_string((uint8_t*)&mountstring[0]);
+		con_send_string((uint8_t*)"\r\n");*/
 
 		if(parity_ok && (stop_bit == 1) ) //start bit condition was already tested above
 		{	// ps2int_status receive procesing block (begin)
@@ -810,10 +838,10 @@ void ps2_clock_receive(bool ps2datapin_logicstate)
 				else
 				{
 					//User messages (debug)
-					console_send_string((uint8_t*)"Got unexpected command response: 0x");
+					con_send_string((uint8_t*)"Got unexpected command response: 0x");
 					conv_uint8_to_2a_hex(data_word, &mountstring[0]);
-					console_send_string((uint8_t*)&mountstring[0]);
-					console_send_string((uint8_t*)"\r\n");
+					con_send_string((uint8_t*)&mountstring[0]);
+					con_send_string((uint8_t*)"\r\n");
 					ps2int_state = PS2INT_RECEIVE;
 					ps2int_RX_bit_idx = 0;//reset PS/2 receive condition
 					fail_count++;
@@ -839,10 +867,10 @@ void ps2_clock_receive(bool ps2datapin_logicstate)
 					ps2int_state = PS2INT_RECEIVE;
 					ps2int_RX_bit_idx = 0;//reset PS/2 receive condition
 					//User messages (debug)
-					console_send_string((uint8_t*)"Got unexpected command response: 0x");
+					con_send_string((uint8_t*)"Got unexpected command response: 0x");
 					conv_uint8_to_2a_hex(data_word, &mountstring[0]);
-					console_send_string((uint8_t*)&mountstring[0]);
-					console_send_string((uint8_t*)"\r\n");
+					con_send_string((uint8_t*)&mountstring[0]);
+					con_send_string((uint8_t*)"\r\n");
 				}
 			}		// ps2int_status receive procesing block (end)
 
@@ -860,13 +888,13 @@ void ps2_clock_receive(bool ps2datapin_logicstate)
 				{	//data_word != COMM_ECHO (0xEE)
 					echo_received = false;
 					//User messages (debug)
-					console_send_string((uint8_t*)"In 0x");
+					con_send_string((uint8_t*)"In 0x");
 					conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-					console_send_string((uint8_t*)&mountstring[0]);
-					console_send_string((uint8_t*)", received 0x");
+					con_send_string((uint8_t*)&mountstring[0]);
+					con_send_string((uint8_t*)", received 0x");
 					conv_uint8_to_2a_hex(data_word, &mountstring[0]);
-					console_send_string((uint8_t*)&mountstring[0]);
-					console_send_string((uint8_t*)" instead of COMM_ECHO (0xEE)\r\n");
+					con_send_string((uint8_t*)&mountstring[0]);
+					con_send_string((uint8_t*)" instead of COMM_ECHO (0xEE)\r\n");
 				}	 //if(data_word == COMM_ECHO)
 			}	//else if (ps2int_state == PS2INT_WAIT_FOR_ECHO)
 
@@ -874,18 +902,18 @@ void ps2_clock_receive(bool ps2datapin_logicstate)
 		else
 		{
 			//User messages (debug)
-			console_send_string((uint8_t*)"Framming Error. RX Data: 0x");
+			con_send_string((uint8_t*)"Framming Error. RX Data: 0x");
 			conv_uint8_to_2a_hex(data_word, &mountstring[0]);
-			console_send_string((uint8_t*)&mountstring[0]);
-			console_send_string((uint8_t*)", parity ");
+			con_send_string((uint8_t*)&mountstring[0]);
+			con_send_string((uint8_t*)", parity ");
 			mountstring[0] = parity_bit ? '1' : '0';
 			mountstring[1] = 0;
-			console_send_string((uint8_t*)mountstring);
-			console_send_string((uint8_t*)", Stop ");
+			con_send_string((uint8_t*)mountstring);
+			con_send_string((uint8_t*)", Stop ");
 			mountstring[0] = stop_bit ? '1' : '0';
 			mountstring[1] = 0;
-			console_send_string((uint8_t*)&mountstring[0]);
-			console_send_string((uint8_t*)"\r\n");
+			con_send_string((uint8_t*)&mountstring[0]);
+			con_send_string((uint8_t*)"\r\n");
 			fail_count++;
 			ps2int_RX_bit_idx = 0;
 		}
@@ -905,9 +933,9 @@ void reset_mount_scancode_machine()
 bool mount_scancode()
 {
 	//Check MSX CAPS and Kana status update
-	if( (caps_state = gpio_get(CAPSLOCK_PORT, CAPSLOCK_PIN_ID)) != caps_former )
+	if( (caps_state = gpio_get(CAPSLOCK_PORT, CAPSLOCK_PIN)) != caps_former )
 		update_ps2_leds = true;
-	if( (kana_state = gpio_get(KANA_PORT, KANA_PIN_ID)) != kana_former )
+	if( (kana_state = gpio_get(KANA_PORT, KANA_PIN)) != kana_former )
 		update_ps2_leds = true;
 	// static uint16_t prev_state_index=0;
 	if (!mount_scancode_OK)
@@ -916,10 +944,10 @@ bool mount_scancode()
 		{
 			ps2_byte_received = get_ps2_byte(&ps2_recv_buffer[0]);
 			//User messages (debug)
-			/*console_send_string((uint8_t*)"Mount_scancode RX Ch=");
+			/*con_send_string((uint8_t*)"Mount_scancode RX Ch=");
 			conv_uint8_to_2a_hex(ps2_byte_received, &mountstring[0]);
-			console_send_string((uint8_t*)&mountstring[0]);
-			console_send_string((uint8_t*)"\r\n"); */
+			con_send_string((uint8_t*)&mountstring[0]);
+			con_send_string((uint8_t*)"\r\n"); */
 			switch (mount_scancode_count_status)
 			{
 			case 0:	//Está lendo o primeiro byte do ps2_byte_received
@@ -1117,43 +1145,43 @@ bool mount_scancode()
 
 void general_debug_setup(void)
 {
-#if MCU == STM32F103C8
-	gpio_set_mode(SYSTICK_port, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, SYSTICK_pin_id);
-	gpio_set(SYSTICK_port, SYSTICK_pin_id); //Default condition is "1"
+#if MCU == STM32F103
+	gpio_set_mode(SYSTICK_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, SYSTICK_PIN);
+	gpio_set(SYSTICK_PORT, SYSTICK_PIN); //Default condition is "1"
 
-	gpio_set_mode(BIT0_pin_port, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, BIT0_pin_id);
-	gpio_set(BIT0_pin_port, BIT0_pin_id); //Default condition is "1"
+	gpio_set_mode(BIT0_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, BIT0_PIN);
+	gpio_set(BIT0_PORT, BIT0_PIN); //Default condition is "1"
 
-	gpio_set_mode(INT_TIM2_port, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, TIM2CC1_pin_id);
-	gpio_set(INT_TIM2_port, TIM2CC1_pin_id); //Default condition is "1"
+	gpio_set_mode(INT_TIM2_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, TIM2CC1_PIN);
+	gpio_set(INT_TIM2_PORT, TIM2CC1_PIN); //Default condition is "1"
 
-	gpio_set_mode(INT_TIM2_port, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, TIM2UIF_pin_id); // PC3 (MSX 8255 Pin 17)
-	gpio_set(INT_TIM2_port, TIM2UIF_pin_id); //Default condition is "1"
+	gpio_set_mode(INT_TIM2_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, TIM2UIF_PIN); // PC3 (MSX 8255 Pin 17)
+	gpio_set(INT_TIM2_PORT, TIM2UIF_PIN); //Default condition is "1"
 	
-	gpio_set_mode(Dbg_Yint_port, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, Dbg_Yint2e3_pin_id); // PC2 e 3 (MSX 8255 Pin 17)
-	gpio_set(Dbg_Yint_port, Dbg_Yint2e3_pin_id); //Default condition is "1"
+	gpio_set_mode(Dbg_Yint_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, Dbg_Yint2e3_PIN); // PC2 e 3 (MSX 8255 Pin 17)
+	gpio_set(Dbg_Yint_PORT, Dbg_Yint2e3_PIN); //Default condition is "1"
 	
-	gpio_set_mode(Dbg_Yint_port, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, Dbg_Yint0e1_pin_id); // PC2 (MSX 8255 Pin 17)
-	gpio_set(Dbg_Yint_port, Dbg_Yint0e1_pin_id); //Default condition is "1"
+	gpio_set_mode(Dbg_Yint_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, Dbg_Yint0e1_PIN); // PC2 (MSX 8255 Pin 17)
+	gpio_set(Dbg_Yint_PORT, Dbg_Yint0e1_PIN); //Default condition is "1"
 #endif
-#if MCU == STM32F401CC
-	gpio_mode_setup(USER_KEY_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, USER_KEY_PIN_ID);
+#if MCU == STM32F401
+	gpio_mode_setup(USER_KEY_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, USER_KEY_PIN);
 
-	gpio_mode_setup(INT_PS2_PIN_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, INT_PS2_PIN_ID);
-	gpio_set_output_options(INT_PS2_PIN_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, INT_PS2_PIN_ID);
-	gpio_set(INT_PS2_PIN_PORT, INT_PS2_PIN_ID); //Default condition is "1"
+	gpio_mode_setup(INT_PS2_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, INT_PS2_PIN);
+	gpio_set_output_options(INT_PS2_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, INT_PS2_PIN);
+	gpio_set(INT_PS2_PORT, INT_PS2_PIN); //Default condition is "1"
 
-	gpio_mode_setup(TIMxCC1_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, TIMxCC1_PIN_ID);
-	gpio_set_output_options(TIMxCC1_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, TIMxCC1_PIN_ID);
-	gpio_set(TIMxCC1_PORT, TIMxCC1_PIN_ID); //Default condition is "1"
+	gpio_mode_setup(TIM2CC1_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, TIM2CC1_PIN);
+	gpio_set_output_options(TIM2CC1_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, TIM2CC1_PIN);
+	gpio_set(TIM2CC1_PORT, TIM2CC1_PIN); //Default condition is "1"
 
-	gpio_mode_setup(TIMxUIF_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, TIMxUIF_PIN_ID);
-	gpio_set_output_options(TIMxUIF_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, TIMxUIF_PIN_ID);
-	gpio_set(TIMxUIF_PORT, TIMxUIF_PIN_ID); //Default condition is "1"
+	gpio_mode_setup(TIM2UIF_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, TIM2UIF_PIN);
+	gpio_set_output_options(TIM2UIF_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, TIM2UIF_PIN);
+	gpio_set(TIM2UIF_PORT, TIM2UIF_PIN); //Default condition is "1"
 	
-	gpio_mode_setup(Dbg_Yint_port, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, Dbg_Yint_pin_id);
-	gpio_set_output_options(Dbg_Yint_port, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, Dbg_Yint_pin_id);
-	gpio_set(Dbg_Yint_port, Dbg_Yint_pin_id); //Default condition is "1"
+	gpio_mode_setup(Dbg_Yint_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, Dbg_Yint_PIN);
+	gpio_set_output_options(Dbg_Yint_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, Dbg_Yint_PIN);
+	gpio_set(Dbg_Yint_PORT, Dbg_Yint_PIN); //Default condition is "1"
 #endif
 }
 
@@ -1161,15 +1189,13 @@ void put_pullups_on_non_used_pins(void)
 {
 	//Left these pins as inputs, but floating state is avoided by activating internal pull-up resistor.
 	//gpio_mode_setup(AVAILABLE_A2_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, AVAILABLE_A2_PIN_ID);
-#if MCU == STM32F103C8
-	gpio_set(AVAILABLE_A3_PORT, AVAILABLE_A3_PIN_ID);		//Hi-Z
-	gpio_set_mode(AVAILABLE_A3_PORT, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_OPENDRAIN, AVAILABLE_A3_PIN_ID);
-	gpio_set(AVAILABLE_B3_PORT, AVAILABLE_B3_PIN_ID);		//Hi-Z
-	gpio_set_mode(AVAILABLE_B3_PORT, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_OPENDRAIN, AVAILABLE_B3_PIN_ID);
+#if MCU == STM32F103
+	gpio_set(AVAILABLE_B3_PORT, AVAILABLE_B3_PIN);		//Hi-Z
+	gpio_set_mode(AVAILABLE_B3_PORT, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_OPENDRAIN, AVAILABLE_B3_PIN);
 #endif
-#if MCU == STM32F401CC
-	gpio_mode_setup(AVAILABLE_A3_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, AVAILABLE_A3_PIN_ID);
-	gpio_mode_setup(AVAILABLE_B2_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLDOWN, AVAILABLE_B2_PIN_ID);	//This port has a R=10K to GND
+#if MCU == STM32F401
+	gpio_mode_setup(AVAILABLE_A3_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, AVAILABLE_A3_PIN);
+	gpio_mode_setup(AVAILABLE_B2_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLDOWN, AVAILABLE_B2_PIN);	//This port has a R=10K to GND
 #endif
 }
 
@@ -1178,21 +1204,23 @@ void put_pullups_on_non_used_pins(void)
 /******************************************* ISR's ***********************************************/
 /*************************************************************************************************/
 /*************************************************************************************************/
+#if MCU == STM32F401
 void exti15_10_isr(void) // PS/2 Clock
 {
 #if PS2_CLK_INTERRUPT == GPIO_INT
 	//Now starts PS2Clk interrupt handler
 	//Debug & performance measurement
-	gpio_clear(INT_PS2_PIN_PORT, INT_PS2_PIN_ID); //Signs start of interruption
+	gpio_clear(INT_PS2_PORT, INT_PS2_PIN); //Signs start of interruption
 	//This was the ISR of PS/2 clock pin. It jumps to ps2_clock_update.
 	//It is an important ISR, but it does not require critical timming resources as MSX Y scan does.
-	if(exti_get_flag_status(PS2_CLOCK_PIN_EXTI))  // EXTI15
+	if(exti_get_flag_status(PS2_CLOCK_EXTI))  // EXTI15
 	{
-		bool ps2datapin_logicstate=gpio_get(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);
+		bool ps2datapin_logicstate=gpio_get(PS2_DATA_PORT, PS2_DATA_PIN);
 		ps2_clock_update(ps2datapin_logicstate);
-		exti_reset_request(PS2_CLOCK_PIN_EXTI);
+		exti_reset_request(PS2_CLOCK_EXTI);
 	}
 	//Debug & performance measurement
-	gpio_set(INT_PS2_PIN_PORT, INT_PS2_PIN_ID); //Signs end of interruption. Default condition is "1"
+	gpio_set(INT_PS2_PORT, INT_PS2_PIN); //Signs end of interruption. Default condition is "1"
 #endif	//#if PS2_CLK_INTERRUPT == GPIO_INT
 }
+#endif	//#if MCU == STM32F401

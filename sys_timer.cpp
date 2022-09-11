@@ -5,12 +5,12 @@
 #include <libopencm3/stm32/exti.h>
 #include <libopencm3/stm32/iwdg.h>
 
+#include "system.h"
 #include "sys_timer.h"
 #include "serial.h"
 #include "hr_timer.h"
 #include "ps2handl.h"
 #include "msxmap.h"
-#include "system.h"
 
 //Use Tab width=2
 
@@ -45,10 +45,15 @@ void systick_setup(void)
 	systick_interrupt_enable();
 
 	// GPIO C13 is the onboard LED
-	gpio_mode_setup(EMBEDDED_BLUE_LED_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, EMBEDDED_BLUE_LED_PIN);
-	gpio_set_output_options(EMBEDDED_BLUE_LED_PORT, GPIO_OTYPE_OD, GPIO_OSPEED_100MHZ, EMBEDDED_BLUE_LED_PIN);
-	
+#if MCU == STM32F103
+	gpio_set_mode(EMBEDDED_LED_PORT, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_OPENDRAIN, EMBEDDED_LED_PIN);
 	// Enable the led. It is active LOW, but the instruction was omitted, since 0 is the default.
+#endif//#if MCU == STM32F103
+#if MCU == STM32F401
+	gpio_mode_setup(EMBEDDED_LED_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, EMBEDDED_LED_PIN);
+	gpio_set_output_options(EMBEDDED_LED_PORT, GPIO_OTYPE_OD, GPIO_OSPEED_100MHZ, EMBEDDED_LED_PIN);
+	// Enable the led. It is active LOW, but the instruction was omitted, since 0 is the default.
+#endif//#if MCU == STM32F401
 }
 
 /*************************************************************************************************/
@@ -65,11 +70,11 @@ void sys_tick_handler(void) // f=30Hz (Each 33,33ms)
 	ticks++;
 	if(ps2_keyb_detected==true && (ticks>=(10*3)))
 	{ /*C13 LED blinks each 2s (2*1 s) on keyboard detected */
-		gpio_toggle(EMBEDDED_BLUE_LED_PORT, EMBEDDED_BLUE_LED_PIN);
+		gpio_toggle(GPIOC, GPIO13);
 		ticks=0;
 	} else if (ps2_keyb_detected==false && ticks >= 7)
 	{ /*C13 LED blinks each 467 ms (2*233.3 ms) on keyboard absence*/
-		gpio_toggle(EMBEDDED_BLUE_LED_PORT, EMBEDDED_BLUE_LED_PIN);
+		gpio_toggle(GPIOC, GPIO13);
 		ticks=0;
 	}
 

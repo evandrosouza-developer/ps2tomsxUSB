@@ -1,12 +1,8 @@
 /*
- * This file is part of the PS/2 Keyboard Adapter for MSX, using libopencm3 project.
- *
- * Copyright (C) 2021 Evandro Souza <evandro.r.souza@gmail.com>, based on
+ * This file is part of PS/2 to MSX keyboard adapter
+ * This file was part of the libopencm3 project.
  *
  * Copyright (C) 2011 Piotr Esden-Tempski <piotr@esden.net>
- *
- * This original SW is compiled to a Sharp/Epcom MSX HB-8000 and a brazilian ABNT2 PS/2 keyboard (ID=275)
- * But it is possible to update the table sending a Intel Hex File through serial or USB
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -21,21 +17,22 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 //Use Tab width=2
-
 
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/stm32/gpio.h>
 
-#include "hr_timer.h"
-#include "ps2handl.h"
 #include "system.h"
+#include "hr_timer.h"
+#if (USE_USB == true)
+#include "cdcacm.h"
+#endif	//#if (USE_USB == true)
+#include "ps2handl.h"
 
 volatile uint16_t state_overflow_tim2;
-volatile uint64_t TIM_Update_Cnt;								//Overflow of time_between_ps2clk
+volatile uint64_t TIM2_Update_Cnt;								//Overflow of time_between_ps2clk
 volatile uint64_t time_between_ps2clk ;
 volatile uint64_t acctimeps2data0;
 
@@ -48,21 +45,20 @@ void tim_setup(uint32_t timer_peripheral)
 {
 	//Used to receive PS/2 Clock interrupt
 
-	// Remap PA15 to TIM2_CH1/ TIM2_ETR
-#if (MCU == STM32F401CC) && (TIM_HR_TIMER == TIM2) && (PS2_CLK_INTERRUPT == TIMxCC1_INT)
-	//Configuring PA15 as input and Alternate function of T2C1
-	//PS2_CLOCK_PIN_ID was initialized at void power_on_ps2_keyboard()
-	//gpio_mode_setup(PS2_CLOCK_PIN_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, PS2_CLOCK_PIN_ID);	//Default config
-	//gpio_set_af(PS2_CLOCK_PIN_PORT, GPIO_AF1, PS2_CLOCK_PIN_ID);
-#endif				//#if (MCU == STM32F401CC) && (TIM_HR_TIMER == TIM2) && (PS2_CLK_INTERRUPT == TIMxCC1_INT)
-	// Enable TIM_HR_TIMER clock
-	rcc_periph_clock_enable(RCC_TIMX);
-	/* Reset TIM_HR_TIMER peripheral to defaults. */
-	rcc_periph_reset_pulse(RST_TIMX);
+	// Enable TIM2 clock
+	rcc_periph_clock_enable(RCC_TIM2);
+
+	/* Reset TIM2 peripheral to defaults. */
+	rcc_periph_reset_pulse(RST_TIM2);
+
 	//PS/2 Clock interrupt
-	// Enable TIM_HR_TIMER interrupt.
-	nvic_enable_irq(NVIC_TIMX_IRQ);
-	nvic_set_priority(NVIC_TIMX_IRQ, IRQ_PRI_TIM);
+	// Enable TIM2 interrupt.
+	nvic_enable_irq(NVIC_TIM2_IRQ);
+	nvic_set_priority(NVIC_TIM2_IRQ, IRQ_PRI_TIM_HR);
+
+	//Configuring PA15 as input and Alternate function of T2C1
+	//gpio_mode_setup(PS2_CLOCK_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, PS2_CLOCK_PIN);	//Default config
+	//gpio_set_af(PS2_CLOCK_PORT, GPIO_AF1, PS2_CLOCK_PIN);
 
 	/* Timer global mode:
 	 * - Prescaler = 84 (Prescler module=83)
@@ -87,7 +83,7 @@ void tim_setup(uint32_t timer_peripheral)
 	timer_enable_preload(timer_peripheral);
 
 	/*
-	TIM_Update_Cnt = 0;
+	TIM2_Update_Cnt = 0;
 	time_between_ps2clk = 0;
 	state_overflow_tim2 = TIME_CAPTURE;
 
@@ -229,7 +225,7 @@ void prepares_capture(uint32_t timer_peripheral)
 	//01: capture is done once every 2 events
 	//10: capture is done once every 4 events
 	//11: capture is done once every 8 events
-	TIM_CCMR1(timer_peripheral) &= ~TIM_CCMR1_IC1PSC_MASK; //No prescaler and no filter, sampling is done at fDTS
+	TIM_CCMR1(timer_peripheral) &= (TIM_CCMR1_IC1F_OFF | 0b11110011); //No prescaler and no filter, sampling is done at fDTS
 
 	//Reenable TIM2 as Capture Timer:
 	//Enable capture from the counter into the capture register by setting the CC1E bit in the TIMx_CCER register.
@@ -245,12 +241,12 @@ void prepares_capture(uint32_t timer_peripheral)
 	//Setup counters
 	time_between_ps2clk = 0;
 	acctimeps2data0 = 0;
-	TIM_Update_Cnt = 0;
+	TIM2_Update_Cnt = 0;
 	//Now points UIF (overflow int) to "normal" state: TIME_CAPTURE
 	//state_overflow_tim2 = TIME_CAPTURE;
 	next_routine = time_capture;
 
-	//Clear TIM2_CR1_URS;	//URS bit (update request selection)
+	//Clear TIM2_CR1_URS;
 	TIM_CR1(timer_peripheral) &= ~TIM_CR1_URS;
 
 	//Counter enable
@@ -263,7 +259,7 @@ void prepares_capture(uint32_t timer_peripheral)
 
 void time_capture(void)
 {
-	TIM_Update_Cnt++;
+	TIM2_Update_Cnt++;
 }
 
 
@@ -273,31 +269,22 @@ void time_capture(void)
 /******************************************* ISR's ***********************************************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-#if TIM_HR_TIMER == TIM2
 void tim2_isr(void)
-#endif
-#if TIM_HR_TIMER == TIM3
-void tim3_isr(void)
-#endif
-#if TIM_HR_TIMER == TIM4
-void tim4_isr(void)
-#endif
-
 {
 	//Verify if Update Interrupt Flag
-	if (timer_get_flag(TIM_HR_TIMER, TIM_SR_UIF))
+	if (timer_get_flag(TIM2, TIM_SR_UIF))
 	{
 		//Debug & performance measurement
-		gpio_clear(TIMxUIF_PORT, TIMxUIF_PIN_ID); //Signs start of interruption
+		gpio_clear(INT_TIM2_PORT, TIM2UIF_PIN); //Signs start of interruption
 
 		// Clear timer Update Interrupt Flag
-		timer_clear_flag(TIM_HR_TIMER, TIM_SR_UIF);
+		timer_clear_flag(TIM2, TIM_SR_UIF);
 		next_routine();
 
 		//Debug & performance measurement
-		gpio_set(TIMxUIF_PORT, TIMxUIF_PIN_ID); //Signs end of interruption
+		gpio_set(INT_TIM2_PORT, TIM2UIF_PIN); //Signs end of interruption
 	}	//if (timer_get_flag(TIM2, TIM_SR_UIF))
-	else if (timer_get_flag(TIM_HR_TIMER, TIM_SR_CC1IF))
+	else if (timer_get_flag(TIM2, TIM_SR_CC1IF))
 	{
 		//When an input capture occurs:
 		//. The TIMx_CCR1 register gets the value of the counter on the active transition.
@@ -312,29 +299,29 @@ void tim4_isr(void)
 		//corresponding CCxG bit in the TIMx_EGR register.
     
 		//Debug & performance measurement
-		gpio_clear(TIMxCC1_PORT, TIMxCC1_PIN_ID); //Signs start of interruption
+		gpio_clear(INT_TIM2_PORT, TIM2CC1_PIN); //Signs start of interruption
 
     // Clear TIM2 Capture compare interrupt pending bit
     //timer_clear_flag(TIM2, TIM_SR_CC1OF |  TIM_SR_CC1IF);
-		TIM_SR(TIM_HR_TIMER) &= ~(TIM_SR_CC1IF | TIM_SR_CC1OF);
+		TIM_SR(TIM2) &= ~(TIM_SR_CC1IF | TIM_SR_CC1OF);
 		// Get the Input Capture value
-		time_between_ps2clk = TIM_Update_Cnt << 32 | TIM_CCR1(TIM_HR_TIMER);
-		//Clear Counter (Reset both CNT & PSC plus )
-		TIM_CR1(TIM_HR_TIMER) |= TIM_CR1_URS;
-		TIM_EGR(TIM_HR_TIMER) |= TIM_EGR_UG;
-		TIM_SR(TIM_HR_TIMER) &= ~TIM_SR_UIF;
-		//Clear TIMx_CR1_URS;
-		TIM_CR1(TIM_HR_TIMER) &= ~TIM_CR1_URS;
+		time_between_ps2clk = TIM2_Update_Cnt << 32 | TIM_CCR1(TIM2);
+		//Clear Counter2 (Reset both CNT & PSC plus )
+		TIM_CR1(TIM2) |= TIM_CR1_URS;	
+		TIM_EGR(TIM2) |= TIM_EGR_UG;
+		TIM_SR(TIM2) &= ~TIM_SR_UIF;
+		//Clear TIM2_CR1_URS;
+		TIM_CR1(TIM2) &= ~TIM_CR1_URS;
 
-		TIM_Update_Cnt = 0;
+		TIM2_Update_Cnt = 0;
 
 		//This is the ISR of PS/2 clock pin. It jumps to ps2_clock_update.
 		//It is an important ISR, but it does not require critical timming resources as MSX Y scan does.
 		// EXTI15 & TIM2_CCR1
-		bool ps2datapin_logicstate = gpio_get(PS2_DATA_PIN_PORT, PS2_DATA_PIN_ID);
+		bool ps2datapin_logicstate=gpio_get(PS2_DATA_PORT, PS2_DATA_PIN);
 		ps2_clock_update(ps2datapin_logicstate);
 
 		//Debug & performance measurement
-		gpio_set(TIMxCC1_PORT, TIMxCC1_PIN_ID); //Signs end of TIM2 interruption. Default condition is "1"
+		gpio_set(INT_TIM2_PORT, TIM2CC1_PIN); //Signs end of TIM2 interruption. Default condition is "1"
 	}
 }
