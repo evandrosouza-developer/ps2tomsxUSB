@@ -35,6 +35,7 @@ CXX		:= $(PREFIX)g++
 LD		:= $(PREFIX)gcc
 AR		:= $(PREFIX)ar
 AS		:= $(PREFIX)as
+SIZE	:= $(PREFIX)size
 OBJCOPY		:= $(PREFIX)objcopy
 OBJDUMP		:= $(PREFIX)objdump
 GDB		:= $(PREFIX)gdb
@@ -147,12 +148,12 @@ LDLIBS		+= -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group
 
 all: elf bin
 
-elf: $(BINARY).elf
-bin: $(BINARY).bin
-hex: $(BINARY).hex
-srec: $(BINARY).srec
-list: $(BINARY).list
-GENERATED_BINARIES=$(BINARY).elf $(BINARY).bin $(BINARY).hex $(BINARY).srec $(BINARY).list $(BINARY).map
+elf: $(BINARY)$(TARGET_MCU).elf
+bin: $(BINARY)$(TARGET_MCU).bin
+hex: $(BINARY)$(TARGET_MCU).hex
+srec: $(BINARY)$(TARGET_MCU).srec
+list: $(BINARY)$(TARGET_MCU).list
+GENERATED_BINARIES=$(BINARY)$(TARGET_MCU).elf $(BINARY)$(TARGET_MCU).bin $(BINARY)$(TARGET_MCU).hex $(BINARY)$(TARGET_MCU).srec $(BINARY)$(TARGET_MCU).list $(BINARY)$(TARGET_MCU).map
 
 images: $(BINARY).images
 flash: $(BINARY).flash
@@ -202,6 +203,7 @@ print-%:
 %.elf %.map: $(OBJS) $(LDSCRIPT) $(OPENCM3_DIR)/lib/lib$(LIBNAME).a
 	@printf "  LD      $(*).elf\n"
 	$(Q)$(LD) $(TGT_LDFLAGS) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(*).elf
+	$(Q)$(SIZE) $(*).elf
 
 %.o: %.c
 	@printf "  CC      $(*).c\n"
@@ -221,7 +223,6 @@ clobber:
 
 clean:
 	@printf "  CLEAN\n"
-#	$(Q)$(RM) $(GENERATED_BINARIES) generated.* $(OBJS) $(OBJS:%.o=%.d)
 	$(Q)$(RM) $(OBJS) $(OBJS:%.o=%.d)
 
 stylecheck: $(STYLECHECKFILES:=.stylecheck)

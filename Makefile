@@ -19,7 +19,7 @@
 ## along with this library.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-BINARY = ps2-msxF4F1
+BINARY = ps2-msx-kb-conv
 OBJS = msxmap.o ps2handl.o dbasemgt.o get_intelhex.o sys_timer.o serial_no.o cdcacm.o serial.o hr_timer.o SpecialFaultHandlers.o
 
 #######=== First step: Identify target inside the Design config file ===########
@@ -61,6 +61,8 @@ ifneq ("$(wildcard $(DSN_CONF_FILE))","") #Check if CONF_FILE is available
     ##=== Third step: Initialize specific make variables related to target ===##
     ifeq ($(doM3), true)
       $(info Making actions for Core M3 family (Blue Pill stm32f103c6t6 & up))
+      TARGET_MCU      = F1
+      ##########################################################################
       LDSCRIPT        = stm32f103x6msx.ld
       ##########################################################################
       LIBNAME         = opencm3_stm32f1
@@ -68,29 +70,32 @@ ifneq ("$(wildcard $(DSN_CONF_FILE))","") #Check if CONF_FILE is available
       FP_FLAGS       ?= -msoft-float
       ARCH_FLAGS      = -mthumb -mcpu=cortex-m3 $(FP_FLAGS) -mfix-cortex-m3-ldrd
       ######### OpenOCD variables specific to target ###########################
-      OOCD_TARGET	   ?= stm32f1x
+      OOCD_TARGET    ?= stm32f1x
       ##########################################################################
     endif #ifeq ($(MCU),STM32F103 )
 
     ifeq ($(doM4), true)
       $(info Making actions for Core M4 family (Black Pill stm32f401xC & up))
+      TARGET_MCU      = F4
+      ##########################################################################
       LDSCRIPT        = stm32f401xCmsx.ld
       #### You should use linker script generation! Specify device! ############
       ifeq ($(DEVICE),)
-        LIBNAME		    = opencm3_stm32f4
+        LIBNAME	      = opencm3_stm32f4
         DEFS         += -DSTM32F4
-        FP_FLAGS	   ?= -mfloat-abi=hard -mfpu=fpv4-sp-d16
+        FP_FLAGS     ?= -mfloat-abi=hard -mfpu=fpv4-sp-d16
         ARCH_FLAGS    = -mthumb -mcpu=cortex-m4 $(FP_FLAGS)
-      endif
+      endif #ifeq ($(DEVICE),)
       ######### OpenOCD variables specific to target ###########################
       OOCD_TARGET    ?= stm32f4x
       ##########################################################################
-    endif #ifeq ($(MCU),STM32F401 )
+    endif #ifeq ($(doM4), true)
 
     ######=== Common fourth step: execute standard libopencm3 rules.mk ===######
-		include rules.mk
+    include rules.mk
     ############################################################################
 
+################=== First step: Error conditions processing ===#################
   else #ifeq ($(word 2,$(MCU)),MCU)
     $(error String $(WHAT_FIND) not found on $(CONF_FILE))
   endif #ifeq ($(word 2,$(MCU)),MCU)
