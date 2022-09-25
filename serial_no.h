@@ -1,3 +1,25 @@
+/** @defgroup 04 serial_no Compute_Serial_Number
+ *
+ * @ingroup infrastructure_apis
+ *
+ * @file serial_no.h Generates ST style and algoritms a serial number based on ST factory mask.
+ *
+ * @brief <b>Generates ST style and algoritms a serial number based on ST factory mask. Header file of serial_no.c.</b>
+ *
+ * @version 1.0.0
+ *
+ * @author @htmlonly &copy; @endhtmlonly 2022
+ * Evandro Souza <evandro.r.souza@gmail.com>
+ *
+ * @date 01 September 2022
+ *
+ * This library supports to compute a serial number based on the Unique_ID
+ * of the STM32F4 and STM32F1 series of ARM Cortex Microcontrollers by
+ * ST Microelectronics.
+ *
+ * LGPL License Terms ref lgpl_license
+ */
+
 /*
  * This file is part of the MSX Keyboard Subsystem Emulator project.
  *
@@ -28,11 +50,12 @@ extern "C" {
 #if !defined SERIAL_NO_H
 #define SERIAL_NO_H
 
+#include "system.h"
 
 void serialno_read(uint8_t*);
 
 
-#endif	//#if !defined SERIAL_NO_H
+#endif  //#if !defined SERIAL_NO_H
 
 #ifdef __cplusplus
 }

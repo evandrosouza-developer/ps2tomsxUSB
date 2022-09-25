@@ -1,3 +1,24 @@
+/** @addtogroup 04 ps2handl PS/2 Keyboard Interface Handler
+ *
+ * @file ps2handl.c Power Control of a PS/2 key and general interface to and from PS/2 keyboard, inlcuding interrupt routines.
+ *
+ * @brief <b>Power Control of a PS/2 key and general interface to and from PS/2 keyboard, inlcuding interrupt routines.</b>
+ *
+ * @version 1.0.0
+ *
+ * @author @htmlonly &copy; @endhtmlonly 2022
+ * Evandro Souza <evandro.r.souza@gmail.com>
+ *
+ * @date 25 September 2022
+ *
+ * This library executes functions to interface and control a PS/2 keyboard, like:
+ * power control of a PS/2 key, general interface to read events and write commands to PS/2
+ * keyboard, including interrupt service routines on the STM32F4 and STM32F1 series of ARM
+ * Cortex Microcontrollers by ST Microelectronics.
+ *
+ * LGPL License Terms ref lgpl_license
+ */
+
 /*
  * This file is part of the PS/2 to MSX keyboard Converter and 
  * MSX Keyboard Subsystem Emulator projects, using libopencm3 project.
@@ -21,32 +42,9 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//Use Tab width=2
 
-
-#include <libopencm3/cm3/nvic.h>
-#include <libopencm3/cm3/systick.h>
-#include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/exti.h>
-#include <libopencm3/stm32/timer.h>
-#include <libopencm3/cm3/scb.h>
-
-#include "serial.h"
 #include "ps2handl.h"
-#include "hr_timer.h"
-#include "system.h"
-//Use Tab width=2
 
-
-//State definitions of PS/2 clock interrupt machine
-enum ps2int{
-	PS2INT_RECEIVE =												0x400,
-	PS2INT_SEND_COMMAND,
-	PS2INT_WAIT_FOR_COMMAND_ACK,
-	PS2INT_SEND_ARGUMENT,
-	PS2INT_WAIT_FOR_ARGUMENT_ACK,
-	PS2INT_WAIT_FOR_ECHO
-};
 
 //PS/2 keyboard iteration constants
 #define COMM_TYPE3_NO_REPEAT							0xF8	//248 Type 3 command
@@ -97,10 +95,10 @@ volatile uint8_t mount_scancode_count_status = 0;
 
 //Need to stay as global to avoid creating different instancies
 volatile uint8_t ps2_recv_buffer[PS2_RECV_BUFFER_SIZE];
-volatile uint8_t ps2_recv_buff_put;
-volatile uint8_t ps2_recv_buff_get;
+volatile uint8_t ps2_recv_put_ptr;
+volatile uint8_t ps2_recv_get_ptr;
 
-//Prototypes not declared in ps2handl.h
+//Local prototypes (not declared in ps2handl.h)
 void init_ps2_recv_buffer(void);
 bool available_ps2_byte(void);
 uint8_t get_ps2_byte(volatile uint8_t*);
@@ -109,6 +107,9 @@ void ps2_clock_send(bool);
 void ps2_clock_receive(bool);
 void ps2_send_command(uint8_t, uint8_t);
 void reset_mount_scancode_machine(void);
+void send_start_bit_now(void);
+void send_start_bit2(void);
+void send_start_bit3(void);
 
 extern char _ebss[];
 
@@ -218,8 +219,8 @@ void init_ps2_recv_buffer()
 	uint8_t i;
 
 	formerscancode = 0;
-	ps2_recv_buff_put=0;
-	ps2_recv_buff_get=0;
+	ps2_recv_put_ptr=0;
+	ps2_recv_get_ptr=0;
 	for(i = 0; i < PS2_RECV_BUFFER_SIZE; ++i)
 	{
 		ps2_recv_buffer[i]=0;
@@ -231,8 +232,8 @@ bool available_ps2_byte()
 {
 	uint8_t i;
 
-	i = ps2_recv_buff_get;
-	if(i == ps2_recv_buff_put)
+	i = ps2_recv_get_ptr;
+	if(i == ps2_recv_put_ptr)
 		//No char in buffer
 		return false;
 	else
@@ -244,13 +245,13 @@ uint8_t get_ps2_byte(volatile uint8_t *buff)
 {
 	uint8_t i, result;
 
-	i = ps2_recv_buff_get;
-	if(i == ps2_recv_buff_put)
+	i = ps2_recv_get_ptr;
+	if(i == ps2_recv_put_ptr)
 		//No char in buffer
 		return 0;
 	result = buff[i];
 	i++;
-	ps2_recv_buff_get = i & (uint16_t)(PS2_RECV_BUFFER_SIZE - 1); //if(i >= (uint16_t)SERIAL_RING_BUFFER_SIZE)	i = 0;
+	ps2_recv_get_ptr = i & (uint16_t)(PS2_RECV_BUFFER_SIZE - 1); //if(i >= (uint16_t)SERIAL_RING_BUFFER_SIZE)	i = 0;
 	return result;
 }
 
@@ -330,9 +331,7 @@ bool ps2_keyb_detect(void)
 	{
 		prev_systicks = systicks;	//To avoid errors on keyboard power up BEFORE the first access
 		if(systicks != systicks_start_command)
-		{
 			prev_systicks = systicks;	//To avoid errors on keyboard power up BEFORE the first access
-		}
 	}
 	if (command_ok)
 	{
@@ -390,10 +389,8 @@ bool ps2_keyb_detect(void)
 	while (!command_ok && (systicks - systicks_start_command)<(2*3)) //Must be excecuted in less than 200ms
 		__asm("nop");
 	if (command_ok)
-	{
 		//User messages
 		con_send_string((uint8_t*)"..  Delay 1 second to repeat, 2cps repeat rate (Type 2 command) OK;\r\n");
-	}
 	else
 	{
 		//User messages
@@ -410,10 +407,8 @@ bool ps2_keyb_detect(void)
 		while (!command_ok && (systicks - systicks_start_command)<(1*3)) //Must be excecuted in less than 100ms
 			__asm("nop");
 		if (command_ok)
-		{
 			//User messages
 			con_send_string((uint8_t*)"..  Type 3 Disables typematic 0xFA repeat OK\r\n");
-		}
 	}
 	return ps2_keyb_detected;
 }
@@ -554,7 +549,7 @@ void ps2_clock_update(bool ps2datapin_logicstate)
 	uint8_t mountstring[16]; //Used in con_send_string()
 	/*Any keyboard interrupt that comes after 900 micro seconds means an error condition,
 	but I`m considering it as an error for about 100 ms, to acommodate this to power on, to answer 
-	to Read ID command. I observed this behavior on my own PS/2 keyboard. It is huge!*/
+	to Read ID command. I observed this behavior on my own PS/2 keyboards. It is huge!*/
 	if( ((ps2int_state == PS2INT_SEND_COMMAND) || (ps2int_state == PS2INT_SEND_ARGUMENT))
 				&& ((ps2int_TX_bit_idx != 0) && (systicks - ps2int_prev_systicks) > 1) )
 	{	//reset to PS/2 receive condition
@@ -791,13 +786,12 @@ void ps2_clock_receive(bool ps2datapin_logicstate)
 			if (ps2int_state == PS2INT_RECEIVE)
 			{
 				//this put routine is new
-				uint8_t i = ps2_recv_buff_put;
-				uint8_t i_next = i + 1;
-				i_next &= (uint8_t)(PS2_RECV_BUFFER_SIZE - 1);
-				if (i_next != ps2_recv_buff_get)
+				uint8_t i = ps2_recv_put_ptr;
+				uint8_t i_next = (i + 1) & (uint8_t)(PS2_RECV_BUFFER_SIZE - 1);
+				if (i_next != ps2_recv_get_ptr)
 				{
 					ps2_recv_buffer[i] = data_word;
-					ps2_recv_buff_put = i_next;
+					ps2_recv_put_ptr = i_next;
 				}
 			}
 
@@ -1026,8 +1020,8 @@ bool mount_scancode()
 				}
 				if (ps2_keystr_e1)  //Break key (8 bytes)
 				{
-					//8 bytes: Dois grupos de 3 e em de 2 bytes: (E1, 14, 77; E1, F0, 14; F0, 77).
-					//O grupo F0, 77 é lido como break code do Num Lock: Inofensivo.
+					//8 bytes: Two groups of 3 and a 2 bytes one: (E1, 14, 77; E1, F0, 14; F0, 77).
+					//The group (F0, 77) is interpreted as a Num Lock break code: Harmless.
 					//Ler apenas os 3 iniciais e desconsiderar os demais. Estou lendo o segundo byte
 					scancode[2] = ps2_byte_received;
 					scancode[0] = 2;
@@ -1055,7 +1049,7 @@ bool mount_scancode()
 				{
 					//São 3 bytes, e estou lendo o terceiro byte, logo, terminou.
 					// Exception is the PrintScreen break: It will be returned as one 3 bytes ps2_byte_received releases:
-					// E0 F0 7C (plus E0 F0 12 and E0 F0 7E are dicarded), but this key is not present on MSX.
+					// E0 F0 7C (plus both E0 F0 12 and E0 F0 7E are dicarded), but this key is not present on MSX.
 					// If you want to map this key, fix it in excel file and click on the black keyboard to rerun macro
 					if( (ps2_byte_received != 0x12) )
 					{
@@ -1075,64 +1069,6 @@ bool mount_scancode()
 				}
  				break;	//case syntax suggested
 			}	//case 2:
-			/*//Está lendo o quarto byte do ps2_byte_received Pause/Break
-			case 3:
-			{
-				if (ps2_keystr_e1 == true)  //Break key (8 bytes)
-				{
-					//São 8 bytes (0xE1 + 7 bytes). Ler apenas os 3 iniciais e desprezar os demais. 
-					//Estou lendo o quarto byte. Não o armazeno.
-					mount_scancode_count_status = 4; //points to next case
-					break;
-				}	   	
- 				break;	//case syntax suggested
-			}	//case 3:
-			//if (mount_scancode_count_status == 4)  //Está lendo o quinto byte do ps2_byte_received Pause/Break
-			case 4:
-			{
-				if (ps2_keystr_e1 == true)  //Break key (8 bytes)
-				{
-					//São 8 bytes (0xE1 + 7 bytes). Ler apenas os 3 iniciais e desprezar os demais. 
-					//Estou lendo o quinto byte. Não o armazeno.
-					mount_scancode_count_status = 5; //points to next case
-					break;
-				}	   	
- 				break;	//case syntax suggested
-			}		//case 4:
-			//Está lendo o sexto byte do ps2_byte_received Pause/Break
-			case 5:
-			{
-				if (ps2_keystr_e1 == true)  //Break key (8 bytes)
-				{
-					//São 8 bytes (0xE1 + 7 bytes). Ler apenas os 3 iniciais e desprezar os demais. 
-					//Estou lendo o sexto byte. Não o armazeno.
-					mount_scancode_count_status = 6; //points to next case
-					break;
-				}	   	
- 				break;	//case syntax suggested
-			}	//case 5
-			//Está lendo o sétimo byte do ps2_byte_received Pause/Break
-			case 6:
-			{
-				if (ps2_keystr_e1 == true)  //Break key (8 bytes)
-					{
-						//São 8 bytes (0xE1 + 7 bytes). Ler apenas os 3 iniciais e desprezar os demais. 
-						//Estou lendo o sétimo byte. Não o armazeno.
-						mount_scancode_count_status = 7; //points to next case
-						break;
-					}	   	
- 				break;	//case syntax suggested
-			}	//case 6
-			case 7:
-			  //Está lendo o oitavo byte do ps2_byte_received Pause/Break
-			{
-				//São 8 bytes (0xE1 + 7 bytes). Ler apenas os 3 iniciais e desprezar os demais. 
-				//Estou lendo o oitavo byte e não o armazeno, logo, terminou
-				//Conclui scan
-				mount_scancode_OK = true;
-				reset_mount_scancode_machine();
-				return true;
-			}*/
 			default:
 				break;
 			}	//switch (mount_scancode_count_status)

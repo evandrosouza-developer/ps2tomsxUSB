@@ -1,5 +1,28 @@
+/** @defgroup 09 USB USB_Group
+ *
+ * @ingroup infrastructure_apis
+ *
+ * @file usb_descriptors.h USB Support routines group on STM32F4 and STM32F1.
+ *
+ * @brief <b>USB Support routines group on STM32F4 and STM32F1. Header file of cdcacm.c.</b>
+ *
+ * @version 1.0.0
+ *
+ * @author @htmlonly &copy; @endhtmlonly 2022
+ * Evandro Souza <evandro.r.souza@gmail.com>
+ * @author @htmlonly &copy; @endhtmlonly 2010
+ * Gareth McMullin <gareth@blacksphere.co.nz>
+ *
+ * @date 01 September 2022
+ *
+ * This library supports the USB in the STM32F4 and STM32F1
+ * series of ARM Cortex Microcontrollers by ST Microelectronics.
+ *
+ * LGPL License Terms ref lgpl_license
+ */
+
 /*
- * This file is part of the MSX Keyboard Subsystem Emulator project.
+ * This file is part of the PS/2 to MSX Keyboard Converter project.
  *
  * Copyright (C) 2022 Evandro Souza <evandro.r.souza@gmail.com>
  *
@@ -27,12 +50,11 @@
 #include <libopencm3/usb/cdc.h>
 #include <libopencm3/usb/dfu.h>
 
-
 #include "version.h"
 #include "system.h"
 #include "serial_no.h"
 
-#define BOARD_IDENT "PS/2 keyboard Interface for MSX " HARDWARE_BASE FIRMWARE_VERSION
+#define BOARD_IDENT "PS/2 to MSX Keyboard Converter " HARDWARE_BASE FIRMWARE_VERSION
 
 
 extern char serial_no[LEN_SERIAL_No + 1];			//Declared as uint8_t on serial_no.c

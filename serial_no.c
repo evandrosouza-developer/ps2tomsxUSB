@@ -1,3 +1,25 @@
+/** @addtogroup 04 serial_no Compute_Serial_Number
+ *
+ * @ingroup infrastructure_apis
+ *
+ * @file serial_no.c Generates ST style and algoritms a serial number based on ST factory mask.
+ *
+ * @brief <b>Generates ST style and algoritms a serial number based on ST factory mask.</b>
+ *
+ * @version 1.0.0
+ *
+ * @author @htmlonly &copy; @endhtmlonly 2022
+ * Evandro Souza <evandro.r.souza@gmail.com>
+ *
+ * @date 01 September 2022
+ *
+ * This library supports to compute a serial number based on the Unique_ID
+ * of the STM32F4 and STM32F1 series of ARM Cortex Microcontrollers by
+ * ST Microelectronics.
+ *
+ * LGPL License Terms ref lgpl_license
+ */
+
 /*
  * This file is part of the MSX Keyboard Subsystem Emulator project.
  *
@@ -24,7 +46,6 @@
 #include <libopencm3/usb/usbd.h>
 #include <libopencm3/usb/cdc.h>*/
 
-#include "system.h"
 #include "serial_no.h"
 
 
@@ -34,32 +55,32 @@ uint8_t serial_no[LEN_SERIAL_No + 1];
 
 void serialno_read(uint8_t *s)
 {
-	// Fetch serial number from chip's unique ID
-	// Use the same serial number as the ST DFU Bootloader.
+  // Fetch serial number from chip's unique ID
+  // Use the same serial number as the ST DFU Bootloader.
 # if (MCU == STM32F401)
-	uint16_t *uid_p = (uint16_t *)DESIG_UNIQUE_ID_BASE;
+  uint16_t *uid_p = (uint16_t *)DESIG_UNIQUE_ID_BASE;
 #define OFFSET 3
 
-	uint64_t unique_id =  ((uint64_t)(uid_p[1] + uid_p[5]) << 32) +
-												((uint64_t)(uid_p[0] + uid_p[4]) << 16) +
-												uid_p[OFFSET];
+  uint64_t unique_id =  ((uint64_t)(uid_p[1] + uid_p[5]) << 32) +
+                        ((uint64_t)(uid_p[0] + uid_p[4]) << 16) +
+                        uid_p[OFFSET];
 # endif
-	
+  
 # if (MCU == STM32F103)
-	uint32_t *uid_p = (uint32_t *)DESIG_UNIQUE_ID_BASE;
-	uint32_t unique_id = uid_p[0] + uid_p[1] + uid_p[2];
+  uint32_t *uid_p = (uint32_t *)DESIG_UNIQUE_ID_BASE;
+  uint32_t unique_id = uid_p[0] + uid_p[1] + uid_p[2];
 # endif
 
-	//Convert each nibble to ASCII HEX
-	uint16_t i, ii;
-	for(i = 0; i < LEN_SERIAL_No; i++)
-	{
-		ii = LEN_SERIAL_No-1-i;
-		s[ii] = ((unique_id >> (4*i)) & 0xF) + '0';
-		if(s[ii] > '9')
-			s[ii] += 'A' - '9' - 1;
-	}
-	s[LEN_SERIAL_No] = 0;
+  //Convert each nibble to ASCII HEX
+  uint16_t i, ii;
+  for(i = 0; i < LEN_SERIAL_No; i++)
+  {
+    ii = LEN_SERIAL_No-1-i;
+    s[ii] = ((unique_id >> (4*i)) & 0xF) + '0';
+    if(s[ii] > '9')
+      s[ii] += 'A' - '9' - 1;
+  }
+  s[LEN_SERIAL_No] = 0;
 
-	return; //s
+  return; //s
 }

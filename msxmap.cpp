@@ -1,5 +1,30 @@
+/** @addtogroup 03 msxmap MSX Interface Translator
+ *
+ * @ingroup MSX_specific_definitions
+ *
+ * @file msxmap.cpp Get a PS/2 key, translates it, put in keyboard interface buffer, dispatch smooth type buffer and process MSX interrupt of reading colunms.
+ *
+ * @brief <b>Get a PS/2 key, translates it, put in keyboard interface buffer, dispatch smooth type buffer and process MSX interrupt of reading colunms.</b>
+ *
+ * @version 1.0.0
+ *
+ * @author @htmlonly &copy; @endhtmlonly 2022
+ * Evandro Souza <evandro.r.souza@gmail.com>
+ *
+ * @date 25 September 2022
+ *
+ * This library executes functions to get a PS/2 key, translates it, put
+ * in keyboard interface buffer, dispatch smooth type buffer and process
+ * MSX interrupt of reading colunms on the STM32F4 and STM32F1 series of
+ * ARM Cortex Microcontrollers by ST Microelectronics.
+ *
+ * LGPL License Terms ref lgpl_license
+ */
+
 /*
- * This file is part of the PS/2 keyboard Interface for MSX project.
+ * This file is part of the PS/2 to MSX Keyboard converter enviroment:
+ * PS/2 to MSX keyboard Converter and MSX Keyboard Subsystem Emulator
+ * designs, based on libopencm3 project.
  *
  * Copyright (C) 2022 Evandro Souza <evandro.r.souza@gmail.com>
  *
@@ -19,18 +44,8 @@
 
 //Use Tab width=2
 
-#include <libopencm3/cm3/nvic.h>
-#include <libopencm3/cm3/systick.h>
-#include <libopencm3/stm32/rcc.h>
-#include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/exti.h>
-//#include <libopencm3/stm32/dbgmcu.h>
-
-#include "system.h"
 #include "msxmap.h"
-#include "ps2handl.h"
-#include "serial.h"
-#include "dbasemgt.h"
+
 
 #define MAX_TIME_OF_IDLE_KEYSCAN_SYSTICKS	4		//30 / 4 = 7.5 times per second is the maximum sweep speed
 #define	NIBBLE														4
@@ -526,6 +541,9 @@ void msxmap::convert2msx()
 
 	/*
 	The structure of the Database is:
+		There are 320 lines, so this structure is capable of manage up to 159 PS/2 keys with their
+		respective make and break codes. The first and last lines are reserved for control (Database
+		version, Database unavailable: seek next, double consistensy check, among others);
 		The  three first columns of each line are the mapped scan codes;
 		The 4th column is The Control Byte, detailed bellow:
 		CONTROL BYTE:
@@ -541,10 +559,14 @@ void msxmap::convert2msx()
 		This table has 3 modifyers: Up two MSX keys are considered to each mapping behavior modifying:
 		
 		5th and 6th columns have the mapping ".0 - Default mapping";
-		7th e 8th columns have the mapping ".1 - NumLock Status+Shift changes";
-		9th and 10th columns have the mapping ".2 - PS/2 Shift", where I need to
-		release the sinalized Shift in PS/2 to the MSX and put the coded key, and so,
-		release them, reapplying the Shift key, deppending on the initial state;
+		7th and 8th columns share mappings   ".1" and ".2":
+
+		                                     ".1 - NumLock Status+Shift changes";
+  
+	  	                                   ".2 - PS/2 Shift", where I need to release the sinalized
+																				 			 Shift in PS/2 to the MSX and put the coded key, and
+																							 so, release them, reapplying the Shift key, deppend-
+																							 ing on the initial state;
 		
 		
 		Each column has a MSX coded key with the following structure:
@@ -559,9 +581,14 @@ void msxmap::convert2msx()
 	Now in my native language: Português
 	 Primeiramente verifico se este scan, que veio em scancode[n], está referenciado na tabela MSX_KEYB_DATABASE_CONVERSION.
 	 Esta tabela, montada em excel, está pronta para ser colada
+
 	 A tabela já está com sort, para tornar possível executar uma pesquisa otimizada.
 	
+	 Há 320 linhas, assim esta estrutura é capaz de manejar até 159 teclas de teclado PS/2 com seus
+	 respectivos códigos make e break. As primeira e última linhas são reservadas para controle do Database
+	 (versão, Database inválido: vá para próximo, dupla verificação de consistêncoa, entre outros);
 	 As três primeiras posições (colunas) de cada linha são os scan codes mapeados;
+
 	 A 4ª coluna é o controle, e tem a seguinte estrutura:
 		CONTROL BYTE:
 		High nibble is Reserved; 
@@ -576,10 +603,11 @@ void msxmap::convert2msx()
 	Esta tabela contém 3 modificadores: São codificadas até 2 teclas do MSX para cada modificador de mapeamento:
 	
 	 5ª e 6ª colunas contém o mapeamento ".0 - Default mapping";
-	 7ª e 8ª colunas contém o mapeamento ".1 - NumLock Status+Shift changes";
-	 9ª e 10ª colunas contém o mapeamento ".2 - PS/2 Shift", onde necessito
-	 liberar o Shift sinalizado no PS/2 para o MSX e colocar as teclas codificadas,
-	 e liberá-las, reinserindo o Shift, se aplicável;
+	 7ª e 8ª colunas compartilham os mapeamentos 1 e 2:
+	 																		 ".1 - NumLock Status+Shift changes";
+	 																		 ".2 - PS/2 Shift", onde necessito liberar o Shift sinalizado
+																			 no PS/2 para o MSX e colocar as teclas codificadas, e liberá-las,
+																			 reinserindo o Shift, se aplicável;
 	
 	
 	 Cada coluna contém uma tecla codificada para o MSX, com a seguinte estrutura:

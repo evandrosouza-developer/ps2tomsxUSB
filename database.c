@@ -1,3 +1,24 @@
+/** @addtogroup 05 dbasemgt Database Management
+ *
+ * @file database.c Database definition file input.
+ *
+ * @brief <b>Database definition, check and maintenance routines.</b>
+ *
+ * @version 1.0.0
+ *
+ * @author @htmlonly &copy; @endhtmlonly 2022
+ * Evandro Souza <evandro.r.souza@gmail.com>
+ *
+ * @date 25 September 2022
+ *
+ * This library executes functions to interface and control a PS/2 keyboard, like:
+ * power control of a PS/2 key, general interface to read events and write commands to PS/2
+ * keyboard, including interrupt service routines on the STM32F4 and STM32F1 series of ARM
+ * Cortex Microcontrollers by ST Microelectronics.
+ *
+ * LGPL License Terms ref lgpl_license
+ */
+
 /*
  * This file is part of the PS/2 to MSX Keyboard converter enviroment:
  * PS/2 to MSX keyboard Converter and MSX Keyboard Subsystem Emulator

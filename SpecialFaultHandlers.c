@@ -1,3 +1,24 @@
+/** @addtogroup 08 special_function_handlers Special Function Handlers
+ *
+ * @file SpecialFaultHandlers.c High Resolution Timer 1us delay and PS/2 clocks measurements routines.</b>
+ *
+ * @brief <b>High Resolution Timer 1us delay and PS/2 clocks measurements routines.</b>
+ *
+ * @version 1.0.0
+ *
+ * @author @htmlonly &copy; @endhtmlonly 2022
+ * Evandro Souza <evandro.r.souza@gmail.com>
+ *
+ * @date 25 September 2022
+ *
+ * This library executes functions to interface and control a PS/2 keyboard, like:
+ * power control of a PS/2 key, general interface to read events and write commands to PS/2
+ * keyboard, including interrupt service routines on the STM32F4 and STM32F1 series of ARM
+ * Cortex Microcontrollers by ST Microelectronics.
+ *
+ * LGPL License Terms ref lgpl_license
+ */
+
 /*
  *
  * Copyright (C) 2021 Evandro Souza <evandro.r.souza@gmail.com>
@@ -18,14 +39,7 @@
 
 //Use Tab width=2
 
-#include <libopencm3/stm32/usart.h>
-#include <libopencm3/cm3/scb.h>
-#include <libopencm3/cm3/vector.h>
-#include <stdio.h>
-#include <stdint.h>
-
 #include "SpecialFaultHandlers.h"
-#include "serial.h"
 
 //Uncomment line below if plan to use printf.
 //#define USE_PRINTF

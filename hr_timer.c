@@ -1,3 +1,24 @@
+/** @addtogroup  07 hr_timer High Resolution Timer
+ *
+ * @file hr_timer.c High Resolution Timer 1us delay and PS/2 clocks measurements routines.
+ *
+ * @brief <b>High Resolution Timer 1us delay and PS/2 clocks measurements routines.</b>
+ *
+ * @version 1.0.0
+ *
+ * @author @htmlonly &copy; @endhtmlonly 2022
+ * Evandro Souza <evandro.r.souza@gmail.com>
+ *
+ * @date 25 September 2022
+ *
+ * This library executes functions to interface and control a PS/2 keyboard, like:
+ * power control of a PS/2 key, general interface to read events and write commands to PS/2
+ * keyboard, including interrupt service routines on the STM32F4 and STM32F1 series of ARM
+ * Cortex Microcontrollers by ST Microelectronics.
+ *
+ * LGPL License Terms ref lgpl_license
+ */
+
 /*
  * This file is part of PS/2 to MSX keyboard adapter
  * This file was part of the libopencm3 project.
@@ -19,17 +40,7 @@
  */
 //Use Tab width=2
 
-#include <libopencm3/cm3/nvic.h>
-#include <libopencm3/stm32/rcc.h>
-#include <libopencm3/stm32/timer.h>
-#include <libopencm3/stm32/gpio.h>
-
-#include "system.h"
 #include "hr_timer.h"
-#if (USE_USB == true)
-#include "cdcacm.h"
-#endif	//#if (USE_USB == true)
-#include "ps2handl.h"
 
 volatile uint16_t state_overflow_tim2;
 volatile uint64_t TIM2_Update_Cnt;								//Overflow of time_between_ps2clk
@@ -41,7 +52,7 @@ void time_capture(void);
 void (*next_routine) (void);
 
 
-void tim_setup(uint32_t timer_peripheral)
+void tim_hr_setup(uint32_t timer_peripheral)
 {
 	//Used to receive PS/2 Clock interrupt
 

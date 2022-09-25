@@ -1,3 +1,24 @@
+/** @addtogroup 05 dbasemgt Database Management
+ *
+ * @file <b>Database maintenance routines - Get IntelHex file from console.
+ *
+ * @brief <b>Database maintenance routines - Get IntelHex file from console.</b>
+ *
+ * @version 1.0.0
+ *
+ * @author @htmlonly &copy; @endhtmlonly 2022
+ * Evandro Souza <evandro.r.souza@gmail.com>
+ *
+ * @date 25 September 2022
+ *
+ * This library executes functions to interface and control a PS/2 keyboard, like:
+ * power control of a PS/2 key, general interface to read events and write commands to PS/2
+ * keyboard, including interrupt service routines on the STM32F4 and STM32F1 series of ARM
+ * Cortex Microcontrollers by ST Microelectronics.
+ *
+ * LGPL License Terms ref lgpl_license
+ */
+
 /*
  * This file was part of the libopencm3 project, but highly modifyed.
  *
