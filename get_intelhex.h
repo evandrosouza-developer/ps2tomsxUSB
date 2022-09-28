@@ -60,4 +60,4 @@ void get_intelhex_to_RAM(uint8_t *ram_buffer, uint16_t ram_buffer_max_size);
 }
 #endif
 
-#endif	//#if !defined GET_INTELHEX_TO_RAM_H
+#endif  //#if !defined GET_INTELHEX_TO_RAM_H

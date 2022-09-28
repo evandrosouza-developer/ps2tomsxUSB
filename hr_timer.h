@@ -56,7 +56,7 @@ extern "C" {
 #include "system.h"
 #if (USE_USB == true)
 #include "cdcacm.h"
-#endif	//#if (USE_USB == true)
+#endif  //#if (USE_USB == true)
 #include "ps2handl.h"
 
 
@@ -86,7 +86,7 @@ void prepares_capture(uint32_t timer_peripheral);
 
 #ifdef __cplusplus
 }
-#endif	//#ifndef hr_timer_h
+#endif  //#ifndef hr_timer_h
 
 
-#endif	//#ifndef hr_timer_h
+#endif  //#ifndef hr_timer_h

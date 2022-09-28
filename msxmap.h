@@ -65,7 +65,7 @@ private:
 
 
 public:
-	/**
+  /**
    * Setup the interface to connect MSX
   */
   void msx_interface_setup(void);
@@ -73,17 +73,17 @@ public:
   /**
    * Implement a smooth typing.
   */
-	void msxqueuekeys(void);
+  void msxqueuekeys(void);
   
   /**
    * Get the PS/2 event and do a pre-filter
   */
-	void convert2msx(void);
+  void convert2msx(void);
   
   /**
    * Convert from PS/2 event to MSX keyboard matrix
   */
-	void msx_dispatch(void);
+  void msx_dispatch(void);
   
   /**
    * Check the availability MSX key in buffer, to implement a smooth typing.
@@ -91,17 +91,17 @@ public:
    * The usage is to put a byte key (bit 7:4 represents Y, bit 3 is the release=1/press=0, bits 2:0 are the X )
    * F = 15Hz. This routine is called from Ticks interrupt routine
   */
-	bool available_msx_disp_keys_queue_buffer(void);
+  bool available_msx_disp_keys_queue_buffer(void);
 
   /**
    * Put a MSX key in buffer, to implement a smooth typing.
   */
-	uint8_t put_msx_disp_keys_queue_buffer(uint8_t);
+  uint8_t put_msx_disp_keys_queue_buffer(uint8_t);
 
   /**
    * Get a MSX key in buffer, to implement a smooth typing.
   */
-	uint8_t get_msx_disp_keys_queue_buffer(void);
+  uint8_t get_msx_disp_keys_queue_buffer(void);
 
   /**
    * Update memory and X port, according PS/2 keyboard event.
@@ -109,8 +109,8 @@ public:
    * y_local Which colunm you put the x_local_setb
    * x_local Which bit you put x_local_setb
    * x_local_setb 0 if keypress or 1 if key release
-  */	void compute_x_bits_and_check_interrupt_stuck ( 
-					volatile uint8_t y_local, volatile uint8_t x_local, volatile bool x_local_setb);
+  */  void compute_x_bits_and_check_interrupt_stuck ( 
+          volatile uint8_t y_local, volatile uint8_t x_local, volatile bool x_local_setb);
 };
 
 

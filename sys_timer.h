@@ -60,6 +60,6 @@
 #define MAX_TICKS_KEYS 4
 
 void systick_setup(void);
-	
-#endif	//#ifndef systimer_h
+  
+#endif  //#ifndef systimer_h
 

@@ -62,17 +62,17 @@ extern "C" {
 #include "hr_timer.h"
 
 
-#define PS2_RECV_BUFFER_SIZE_POWER 6	//64 uint8_t positions
-#define PS2_RECV_BUFFER_SIZE 64				//(2 << PS2_RECV_BUFFER_SIZE_POWER)
+#define PS2_RECV_BUFFER_SIZE_POWER 6  //64 uint8_t positions
+#define PS2_RECV_BUFFER_SIZE 64       //(2 << PS2_RECV_BUFFER_SIZE_POWER)
 
 //State definitions of PS/2 clock interrupt machine
 enum ps2int{
-	PS2INT_RECEIVE =												0x400,
-	PS2INT_SEND_COMMAND,
-	PS2INT_WAIT_FOR_COMMAND_ACK,
-	PS2INT_SEND_ARGUMENT,
-	PS2INT_WAIT_FOR_ARGUMENT_ACK,
-	PS2INT_WAIT_FOR_ECHO
+  PS2INT_RECEIVE =                        0x400,
+  PS2INT_SEND_COMMAND,
+  PS2INT_WAIT_FOR_COMMAND_ACK,
+  PS2INT_SEND_ARGUMENT,
+  PS2INT_WAIT_FOR_ARGUMENT_ACK,
+  PS2INT_WAIT_FOR_ECHO
 };
 
 /**
@@ -142,4 +142,4 @@ void put_pullups_on_non_used_pins(void);
 }
 #endif
 
-#endif	//#ifndef ps2handl_h
+#endif  //#ifndef ps2handl_h

@@ -75,10 +75,10 @@ extern "C" {
 #define DESIG_UNIQ_ID_BASE        0x1FFFF7E8;
 #define LEN_SERIAL_No             8
 #endif  //#if MCU == STM32F103
-#if MCU ==STM32F401
+#if MCU == STM32F401
 #define DESIG_UNIQ_ID_BASE        0x1FFF7A10;
 #define LEN_SERIAL_No             12
-#endif  //#if MCU ==STM32F401
+#endif  //#if MCU == STM32F401
 #endif  //#ifndef DESIG_UNIQ_ID_BASE
 
 
@@ -100,7 +100,7 @@ extern "C" {
 #define FLASH_PAGE_SIZE           0x400       //1K in STM32F103
 #endif  //#if MCU == STM32F103
 
-#if MCU ==STM32F401
+#if MCU == STM32F401
 #define NUM_DATABASE_IMG          6           //to fit in a 16k window
 //Address of Base of flash page, used to put various Databases without need of erase each time
 //update process is done. In STM32F4CCU6, the Database remains on the following flash address,
@@ -109,7 +109,7 @@ extern "C" {
 #define FLASH_SECTOR3_BASE        0x0800C000
 #define FLASH_SECTOR3_TOP         0x0800FFFF
 #define FLASH_SECTOR3_NUMBER      3
-#endif  //#if MCU ==STM32F401
+#endif  //#if MCU == STM32F401
 
 
 /* High Resolution Timer definitions */
@@ -539,7 +539,7 @@ enum ENDPOINT{
 #define RX_DMA_SIZE               256
 #define MNTSTR_SIZE               128
 #define BASE_RING_BUFFER_SZ_POWER 12
-#endif  //#if MCU ==STM32F401
+#endif  //#if MCU == STM32F401
 
 #define BASE_RING_BUFFER_SIZE     (1 << BASE_RING_BUFFER_SZ_POWER)
 #define CON_TX_RING_BUFFER_SIZE   (BASE_RING_BUFFER_SIZE >> 1)
@@ -564,7 +564,7 @@ enum ENDPOINT{
 /**  Defines X_ON and X_OFF.
  *
 @{*/
-#define X_ON             		      17
+#define X_ON                      17
 #define X_OFF                     19
 /**@}*/
 
@@ -687,7 +687,7 @@ enum ENDPOINT{
 #define BOOTMAGIC0 0xb007da7a
 #define BOOTMAGIC1 0xbaadfeed
 /**@}*/
-#endif  //#if MCU ==STM32F401
+#endif  //#if MCU == STM32F401
 
 
 /**  Compute ring available characters.
