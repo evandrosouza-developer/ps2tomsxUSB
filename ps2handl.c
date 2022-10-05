@@ -1,8 +1,8 @@
 /** @addtogroup 04 ps2handl PS/2 Keyboard Interface Handler
  *
- * @file ps2handl.c Power Control of a PS/2 key and general interface to and from PS/2 keyboard, inlcuding interrupt routines.
+ * @file ps2handl.c Power Control of a PS/2 key and general interface to and from PS/2 keyboard, including interrupt service routines.
  *
- * @brief <b>Power Control of a PS/2 key and general interface to and from PS/2 keyboard, inlcuding interrupt routines.</b>
+ * @brief <b>Power Control of a PS/2 key and general interface to and from PS/2 keyboard, including interrupt service routines.</b>
  *
  * @version 1.0.0
  *
@@ -165,10 +165,9 @@ void power_on_ps2_keyboard()
 
 #if PS2_CLK_INTERRUPT == GPIO_INT
   // Enable EXTI15_10 interrupt.
-  nvic_enable_irq(IRQ_PRI_TIM_HR);
-
+  nvic_enable_irq(NVIC_EXTI15_10_IRQ);
   //High priority to avoid PS/2 interrupt loss
-  nvic_set_priority(NVIC_EXTI15_10_IRQ, IRQ_PRI_TIM_HR);
+  nvic_set_priority(NVIC_EXTI15_10_IRQ, IRQ_PRI_EXT15);
 #endif //#if PS2_CLK_INTERRUPT == GPIO_INT
 
   //Starts with RX state: PS2INT_RECEIVE
@@ -274,7 +273,7 @@ bool ps2_keyb_detect(void)
   prev_systicks = systicks;
   ps2_keyb_detected = false;
   uint16_t localcount = 0;
-  while ( ((systicks-systicks_start_command) < (25*3)) && (!available_ps2_byte()) ) //Wait 2500ms for keyboard power on
+  while ( ((systicks-systicks_start_command) < (25 * FREQ_INT_SYSTICK / 10)) && (!available_ps2_byte()) ) //Wait 2500ms for keyboard power on
   {
     if(prev_systicks != systicks)
     {//systicks updated. Each 15 ticks is a "#"  |.....|
@@ -327,7 +326,7 @@ bool ps2_keyb_detect(void)
   //con_send_string((uint8_t*)"Sending Read ID comm\r\n");
   systicks_start_command = systicks;
   ps2_send_command(COMM_READ_ID, ARG_NO_ARG); //Read ID command.
-  while (!command_ok && (systicks - systicks_start_command)<(3*3)) //Must be excecuted in less than 100ms
+  while (!command_ok && (systicks - systicks_start_command) < (3 * FREQ_INT_SYSTICK / 10)) //Must be excecuted in less than 100ms
   {
     prev_systicks = systicks; //To avoid errors on keyboard power up BEFORE the first access
     if(systicks != systicks_start_command)
@@ -337,14 +336,14 @@ bool ps2_keyb_detect(void)
   {
     //con_send_string((uint8_t*)"Waiting 0xAB\r\n");
     systicks_start_command = systicks;
-    while(!available_ps2_byte()&& (systicks - systicks_start_command)<(1*3))
+    while(!available_ps2_byte() && (systicks - systicks_start_command) < (FREQ_INT_SYSTICK / 10))
     __asm("nop");
     ps2_byte_received = get_ps2_byte(&ps2_recv_buffer[0]);
     if(ps2_byte_received == KB_FIRST_ID)
     {
       //con_send_string((uint8_t*)"Waiting 0x83\r\n");
       systicks_start_command = systicks;
-      while(!available_ps2_byte() && (systicks - systicks_start_command)<(1*3))
+      while(!available_ps2_byte() && (systicks - systicks_start_command) < (FREQ_INT_SYSTICK / 10))
       __asm("nop");
       ps2_byte_received = get_ps2_byte(&ps2_recv_buffer[0]);
       if(ps2_byte_received == KB_SECOND_ID)
@@ -386,7 +385,7 @@ bool ps2_keyb_detect(void)
   //Type 2 command: Set typematic rate to 2 cps and delay to 1 second.
   systicks_start_command = systicks;
   ps2_send_command(COMM_SET_TYPEMATIC_RATEDELAY, ARG_LOWRATE_LOWDELAY);
-  while (!command_ok && (systicks - systicks_start_command)<(2*3)) //Must be excecuted in less than 200ms
+  while (!command_ok && (systicks - systicks_start_command) < (2 * FREQ_INT_SYSTICK / 10)) //Must be excecuted in less than 200ms
     __asm("nop");
   if (command_ok)
     //User messages
@@ -396,16 +395,14 @@ bool ps2_keyb_detect(void)
     //User messages
     con_send_string((uint8_t*)"..  Type 3 Disables typematic repeat 0xFA requested\r\n");
 
-    //.1 second delay (to display serial contents) ONLY TO DEBUG
+    //.1 second delay (to display serial contents)
     systicks_start_command = systicks;
-    while ((systicks - systicks_start_command)<(1*3))
-      __asm("nop");
+    while ((systicks - systicks_start_command) < (FREQ_INT_SYSTICK / 10)) __asm("nop");
 
     systicks_start_command = systicks;
     //Type 3 command: Set All Keys Make/Break: This one only disables typematic repeat and applies to all keys
     ps2_send_command(COMM_TYPE3_NO_REPEAT, ARG_NO_ARG);
-    while (!command_ok && (systicks - systicks_start_command)<(1*3)) //Must be excecuted in less than 100ms
-      __asm("nop");
+    while (!command_ok && (systicks - systicks_start_command) < (FREQ_INT_SYSTICK / 10)) __asm("nop"); //Must be excecuted in less than 100ms
     if (command_ok)
       //User messages
       con_send_string((uint8_t*)"..  Type 3 Disables typematic 0xFA repeat OK\r\n");
@@ -417,10 +414,9 @@ bool ps2_keyb_detect(void)
 void reset_requested(void)
 {
   power_off_ps2_keyboard();
-  //Wait here 1/3 second to consolidate this power off
+  //Wait here 1/2 second to consolidate this power off
   uint32_t readsysticks = systicks;
-  //wait 1/3 second
-  while (systicks <= (readsysticks + 10)) __asm("nop");
+  while (systicks <= (readsysticks + (FREQ_INT_SYSTICK / 2))) __asm("nop");
   systick_interrupt_disable();
 #if MCU == STM32F401
   uint32_t *magic = (uint32_t *)&_ebss;
@@ -946,7 +942,7 @@ bool mount_scancode()
       {
       case 0: //Está lendo o primeiro byte do ps2_byte_received
       {
-        if((ps2_byte_received > 0) && (ps2_byte_received < 0xE0)) //Se até 0xDF cai aqui
+        if(ps2_byte_received < 0xE0) //Se até 0xDF cai aqui
         {
           //Concluded. 1 byte only scan code.
           scancode[1] = ps2_byte_received;
@@ -1094,11 +1090,11 @@ void general_debug_setup(void)
   gpio_set_mode(INT_TIM2_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, TIM2UIF_PIN); // PC3 (MSX 8255 Pin 17)
   gpio_set(INT_TIM2_PORT, TIM2UIF_PIN); //Default condition is "1"
   
-  gpio_set_mode(Dbg_Yint_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, Dbg_Yint2e3_PIN); // PC2 e 3 (MSX 8255 Pin 17)
-  gpio_set(Dbg_Yint_PORT, Dbg_Yint2e3_PIN); //Default condition is "1"
+  gpio_set_mode(Dbg_Yint_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, Dbg_Yint2and3_PIN); // PC2 e 3 (MSX 8255 Pin 17)
+  gpio_set(Dbg_Yint_PORT, Dbg_Yint2and3_PIN); //Default condition is "1"
   
-  gpio_set_mode(Dbg_Yint_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, Dbg_Yint0e1_PIN); // PC2 (MSX 8255 Pin 17)
-  gpio_set(Dbg_Yint_PORT, Dbg_Yint0e1_PIN); //Default condition is "1"
+  gpio_set_mode(Dbg_Yint_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, Dbg_Yint0and1_PIN); // PC2 (MSX 8255 Pin 17)
+  gpio_set(Dbg_Yint_PORT, Dbg_Yint0and1_PIN); //Default condition is "1"
 #endif
 #if MCU == STM32F401
   gpio_mode_setup(USER_KEY_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, USER_KEY_PIN);

@@ -1,6 +1,6 @@
 /** @addtogroup 05 dbasemgt Database Management
  *
- * @file <b>Database maintenance routines - Get IntelHex file from console.
+ * @file get_intelhex.c Database maintenance routines - Get IntelHex file from console.
  *
  * @brief <b>Database maintenance routines - Get IntelHex file from console.</b>
  *
@@ -50,19 +50,7 @@
 //no hardware flow control
 
 
-#include <libopencm3/stm32/usart.h>
-#include <libopencm3/stm32/flash.h>
-#include <libopencm3/stm32/gpio.h>
-
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-#include "system.h"
 #include "get_intelhex.h"
-#include "ps2handl.h"
-#include "serial.h"
-
 
 //Processor related sizes and adress:
 #define USART_ECHO_EN             1 //All chars received in Intel Hex are echoed in serial routines

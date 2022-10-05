@@ -1,4 +1,63 @@
-#pragma location=0x800C000 
+#pragma location = 0x800C000
+/** @addtogroup 05 dbasemgt Database Management
+ *
+ * @file flash_data.c Database space fill declarations.
+ *
+ * @brief <b>Database space fill declarations.</b>
+ *
+ * @version 1.0.0
+ *
+ * @author @htmlonly &copy; @endhtmlonly 2022
+ * Evandro Souza <evandro.r.souza@gmail.com>
+ *
+ * @date September, 27th 2022
+ *
+ * This module has the function of reserve a storage area of all Databases (valid and invalid).
+ * The first Database will be put at 0x0800F200, and the next one 2560 bytes below: 
+ * 0x0800E800, than the one at 0x0800F200 will signal "find next", and so on until it reaches 
+ * 0x0800000 (base of Database address) on the STM32F4 only series of ARM Cortex Microcontrollers
+ * by ST Microelectronics.
+ *
+ * LGPL License Terms ref lgpl_license
+ */
+
+/*
+ * This file is part of the PS/2 to MSX keyboard Converter and 
+ * MSX Keyboard Subsystem Emulator projects, using libopencm3 project.
+ *
+ * Copyright (C) 2022 Evandro Souza <evandro.r.souza@gmail.com>
+ *
+ * This original SW is compiled to a Sharp/Epcom MSX HB-8000 and a brazilian ABNT2 PS/2 keyboard (ID=275)
+ * But it is possible to update the table sending a Intel Hex File through serial or USB
+ *
+ * This library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/**
+ * @brief Data reservation for Database flashing
+ * 
+ * This space is reserved as a storage area of Database structure (valid and invalid).
+ * The first Database will be put at 0x0800F200, and the next one 2560 bytes below: 
+ * 0x0800E800, than the one at 0x0800F200 will signal "find next", and so on until it reaches 
+ * 0x0800000 (base of Database address).
+ */
+
+#include "system.h"
+
+
+#if MCU == STM32F401
+
 volatile const uint32_t flash_data[4096] = {
 //0KB 'til here
 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,\
@@ -273,4 +332,6 @@ volatile const uint32_t flash_data[4096] = {
 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,\
 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF\
 //16KB 'til here
-}
+};
+
+#endif  //#if MCU == STM32F401

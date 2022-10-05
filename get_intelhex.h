@@ -1,6 +1,6 @@
 /** @addtogroup 05 dbasemgt Database Management
  *
- * @file get_intelhex.h Database maintenance routines - Get IntelHex file.
+ * @file get_intelhex.h Database maintenance routines - Get IntelHex file from console.
  *
  * @brief <b>Database maintenance routines - Get IntelHex file from console. Header file of get_intelhex.c.</b>
  *
@@ -45,6 +45,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <libopencm3/stm32/usart.h>
+#include <libopencm3/stm32/flash.h>
+#include <libopencm3/stm32/gpio.h>
+
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "system.h"
+#include "ps2handl.h"
+#include "serial.h"
+
+
 
 /*entry point*/
 /**

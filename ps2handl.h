@@ -1,8 +1,8 @@
 /** @defgroup 04 ps2handl PS/2 Keyboard Interface Handler
  *
- * @file ps2handl.h Power Control of a PS/2 key and general interface to and from PS/2 keyboard, inlcuding interrupt routines.
+ * @file ps2handl.h Power Control of a PS/2 key and general interface to and from PS/2 keyboard, including interrupt serviceroutines.
  *
- * @brief <b>Power Control of a PS/2 key and general interface to and from PS/2 keyboard, inlcuding interrupt routines. Header file of ps2handl.c.</b>
+ * @brief <b>Power Control of a PS/2 key and general interface to and from PS/2 keyboard, including interrupt service routines. Header file of ps2handl.c.</b>
  *
  * @version 1.0.0
  *

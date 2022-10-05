@@ -1,8 +1,8 @@
 /** @addtogroup 08 special_function_handlers Special Function Handlers
  *
- * @file SpecialFaultHandlers.c High Resolution Timer 1us delay and PS/2 clocks measurements routines.</b>
+ * @file SpecialFaultHandlers.c Intercept and show friendly messages from faulty conditions.</b>
  *
- * @brief <b>High Resolution Timer 1us delay and PS/2 clocks measurements routines.</b>
+ * @brief <b>Intercept and show friendly messages from faulty conditions.</b>
  *
  * @version 1.0.0
  *
@@ -11,10 +11,8 @@
  *
  * @date 25 September 2022
  *
- * This library executes functions to interface and control a PS/2 keyboard, like:
- * power control of a PS/2 key, general interface to read events and write commands to PS/2
- * keyboard, including interrupt service routines on the STM32F4 and STM32F1 series of ARM
- * Cortex Microcontrollers by ST Microelectronics.
+ * This library intercept and show friendly messages from faulty conditions on
+ * the STM32F4 and STM32F1 series of ARM Cortex Microcontrollers by ST Microelectronics.
  *
  * LGPL License Terms ref lgpl_license
  */

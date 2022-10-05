@@ -243,33 +243,42 @@ void msxmap::msx_interface_setup(void)
   gpio_set_mode(KANA_PORT, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN, KANA_PIN); // KANA_LED - Mapeado para Scroll Lock
   gpio_set(KANA_PORT, KANA_PIN); //pull up resistor
   gpio_port_config_lock(KANA_PORT, KANA_PIN);
+
+	// Enable EXTI9_5 interrupt. (for Y - bits 0 and 1 - Pins PA8 and PA9)
+	nvic_enable_irq(NVIC_EXTI9_5_IRQ);
+	// Enable EXTI15_10 interrupt.  (for Y - bits 2 and 3 - Pins PA11 and PA12)
+	nvic_enable_irq(NVIC_EXTI15_10_IRQ);
+	//Highest priority to avoid interrupt Y scan
+	nvic_set_priority(NVIC_EXTI9_5_IRQ, IRQ_PRI_Y_SCAN); 		//Y0 and Y1
+	nvic_set_priority(NVIC_EXTI15_10_IRQ, IRQ_PRI_Y_SCAN);	//Y2 and Y3
 #endif  //#if MCU == STM32F103
 #if MCU == STM32F401
   gpio_mode_setup(KANA_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, KANA_PIN); // KANA_LED - Mapeado para Scroll Lock
   gpio_set(KANA_PORT, KANA_PIN); //pull up resistor
   gpio_port_config_lock(KANA_PORT, KANA_PIN);
-#endif
 
   // Enable EXTI9_5 interrupt. (for Y - bits 3 to 0)
   nvic_enable_irq(NVIC_EXTI9_5_IRQ);
-
   //Highest priority to avoid interrupt Y scan loss
   nvic_set_priority(NVIC_EXTI9_5_IRQ, IRQ_PRI_Y_SCAN);    //Y3 to Y0
+#endif
 
 #if MCU == STM32F401
+  DBGMCU_APB1_FZ = DBG_IWDG_STOP | DBG_WWDG_STOP
   //Workaround here to stop iwdg, wwdg and TIMx counters during halt
 #if TIM_HR == TIM2
-  DBGMCU_APB1_FZ = DBG_IWDG_STOP | DBG_WWDG_STOP | DBG_TIM2_STOP;
+   | DBG_TIM2_STOP
 #endif  //#if TIM_HR == TIM2
 #if TIM_HR == TIM3
-  DBGMCU_APB1_FZ = DBG_IWDG_STOP | DBG_WWDG_STOP | DBG_TIM3_STOP;
+   | DBG_TIM3_STOP
 #endif  //#if TIM_HR == TIM3
 #if TIM_HR == TIM4
-  DBGMCU_APB1_FZ = DBG_IWDG_STOP | DBG_WWDG_STOP | DBG_TIM4_STOP;
+   | DBG_TIM4_STOP
 #endif  //#if TIM_HR == TIM4
 #if TIM_HR == TIM5
-  DBGMCU_APB1_FZ = DBG_IWDG_STOP | DBG_WWDG_STOP | DBG_TIM5_STOP;
+   | DBG_TIM5_STOP
 #endif  //#if TIM_HR == TIM5
+  ;
 #endif  //#if MCU == STM32F401
 }
 
@@ -982,18 +991,18 @@ void exti15_10_isr(void) // PC2 and PC3 - It works like interrupt on change of e
   volatile uint16_t msx_Y_scan;
 
   //Debug & performance measurement
-  gpio_clear(Dbg_Yint_PORT, Dbg_Yint2e3_PIN); //Signs start of interruption
+  gpio_clear(Dbg_Yint_PORT, Dbg_Yint2and3_PIN); //Signs start of interruption
 
   // Read the MSX keyboard Y scan through GPIO pins A12:A8, mask to 0 other bits and rotate right 8
-  msx_Y_scan = (gpio_port_read(GPIOA)>>8) & 0x0F;
+  msx_Y_scan = (gpio_port_read(GPIOA)) & Y_MASK;
+  msx_Y_scan = ((msx_Y_scan >> 8) & 0x3) | ((msx_Y_scan >> 9) & 0xC);
   
   GPIOB_BSRR = x_bits[msx_Y_scan]; //Atomic GPIOB update => Release and press MSX keys for this column
 
   //Debug & performance measurement
-  gpio_set(Dbg_Yint_PORT, Dbg_Yint2e3_PIN); //Signs end of interruption. Default condition is "1"
+  gpio_set(Dbg_Yint_PORT, Dbg_Yint2and3_PIN); //Signs end of interruption. Default condition is "1"
     
   // Clear interrupt Y Scan flags, including those not used on this ISR
-  // if(exti_get_flag_status(EXTI7), (EXTI6), (EXTI4) and (EXTI3))
   exti_reset_request(Y0_exti | Y1_exti | Y2_exti | Y3_exti);
     
   //Update systicks (time stamp) for this Y
@@ -1005,50 +1014,41 @@ void exti9_5_isr(void) // PC0 and PC1 - It works like interrupt on change of eac
   volatile uint16_t msx_Y_scan;
 
   //Debug & performance measurement
-  gpio_clear(Dbg_Yint_PORT, Dbg_Yint0e1_PIN); //Signs start of interruption
+  gpio_clear(Dbg_Yint_PORT, Dbg_Yint0and1_PIN); //Signs start of interruption
 
   // Read the MSX keyboard Y scan through GPIO pins A12:A8, mask to 0 other bits and rotate right 8 and 9
   msx_Y_scan = (gpio_port_read(GPIOA)) & Y_MASK;
   msx_Y_scan = ((msx_Y_scan >> 8) & 0x3) | ((msx_Y_scan >> 9) & 0xC);
 
-  /*//Port A10 broken => Using B4 instead
-  if (gpio_get(Y2_port, Y2_PIN))
-    msx_Y_scan |= 0b0100;
-  else
-    msx_Y_scan &= ~0b0100;*/
-  
   GPIOB_BSRR = x_bits[msx_Y_scan]; //Atomic GPIOB update => Release and press MSX keys for this column
 
   //Debug & performance measurement
-  gpio_set(Dbg_Yint_PORT, Dbg_Yint0e1_PIN); //Signs end of interruption. Default condition is "1"
+  gpio_set(Dbg_Yint_PORT, Dbg_Yint0and1_PIN); //Signs end of interruption. Default condition is "1"
 
   // Clear interrupt Y Scan flags, including those not used on this ISR
-  // if(exti_get_flag_status(EXTI7), (EXTI6), (EXTI4) and (EXTI3))
   exti_reset_request(Y0_exti | Y1_exti | Y2_exti | Y3_exti);
     
   //Update systicks (time stamp) for this Y
   previous_y_systick[msx_Y_scan]  = systicks;
 }
+#endif  //#if MCU == STM32F103
 
 
 #if MCU == STM32F401
-void exti9_5_isr(void) // PC3, PC2, PC1 and PC0 - This ISR works like interrupt on change of each one of Y connected pins
+void exti9_5_isr(void) // PC3:0 - This ISR works like interrupt on change of each one of Y connected pins
 {
-  volatile uint16_t msx_Y_scan;
+  uint16_t msx_Y_scan;
 
-  //Debug & performance measurement
-  //gpio_clear(Dbg_Yint_PORT, Dbg_Yint0e1_PIN); //Signs start of interruption. This line is useful only to measure performance, ie, only in development phase
-  GPIO_BSRR(Dbg_Yint_PORT) = Dbg_Yint_PIN << 16;
+  //Performance measurement
+  GPIO_BSRR(Dbg_Yint_PORT) = Dbg_Yint_PIN << 16; //Signs start of interruption. This line is useful only to measure performance.
 
   // Read the MSX keyboard Y scan through GPIO pins A12:A8, mask to 0 other bits and rotate right 8 and 9
   msx_Y_scan = (gpio_port_read(Y0_PORT) & Y_MASK) >> 5;
   
-  if(Y_XLAT_TABLE[y_local] == msx_Y_scan)
-    GPIO_BSRR(X_PORT) = x_bits[msx_Y_scan]; //Atomic GPIOB update => Release and press MSX keys for this column
+  GPIO_BSRR(X_PORT) = x_bits[msx_Y_scan]; //Atomic GPIOB update => Release and press MSX keys for this column. This ends time criticity.
 
-  //Debug & performance measurement
-  //gpio_set(Dbg_Yint_PORT, Dbg_Yint_PIN); //Signs end of interruption. Default condition is "1". This line is useful only to measure performance, ie, only in development phase
-  GPIO_BSRR(Dbg_Yint_PORT) = Dbg_Yint_PIN;
+  //Performance measurement
+  GPIO_BSRR(Dbg_Yint_PORT) = Dbg_Yint_PIN; //Signs end of interruption. Default condition is "1". This line is useful only to measure performance.
 
   // Clear interrupt Y Scan flags
   exti_reset_request(Y0_exti | Y1_exti | Y2_exti | Y3_exti);
@@ -1057,33 +1057,3 @@ void exti9_5_isr(void) // PC3, PC2, PC1 and PC0 - This ISR works like interrupt 
   previous_y_systick[msx_Y_scan] = systicks;
 }
 #endif  //#if MCU == STM32F401
-
-
-/*void exti4_isr(void)  //Port A10 broken => Using B4 instead
-{
-  //Debug & performance measurement
-  gpio_clear(Dbg_Yint_port, Dbg_Yint2e3_PIN); //Signs start of interruption
-
-  // Read the MSX keyboard Y scan through GPIO pins A11:A8, mask to 0 other bits and rotate right 8
-  msx_Y_scan = (gpio_port_read(GPIOA)>>8) & 0x0F;
-  
-  //Port A10 broken => Using B4 instead
-  if (gpio_get(Y2_port, Y2_PIN))
-    msx_Y_scan |= 0b0100;
-  else
-    msx_Y_scan &= ~0b0100;
-  
-  GPIOB_BSRR = x_bits[msx_Y_scan]; //Atomic GPIOB update => Release and press MSX keys for this column
-
-  //Debug & performance measurement
-  gpio_set(Dbg_Yint_port, Dbg_Yint2e3_PIN); //Signs end of interruption. Default condition is "1"
-    
-  // Clear interrupt Y Scan flags, including those not used on this ISR
-  // if(exti_get_flag_status(EXTI7), (EXTI6), (EXTI4) and (EXTI3))
-  exti_reset_request(Y0_exti | Y1_exti | Y2_exti | Y3_exti);
-    
-  //Update systicks (time stamp) for this Y
-  previous_y_systick[msx_Y_scan]  = systicks;
-
-}*/
-#endif  //#if MCU == STM32F103

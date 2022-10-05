@@ -64,7 +64,7 @@ extern "C" {
 
 /* Microcontroller STM32F103 or STM32F401 */
 #define STM32F103                 0x410     //Blue Pill
-#define STM32F401                 0x423     //WeAct MiniF4 Black Pill
+#define STM32F401                 0x423     //WeAct Studio MiniF4 Black Pill
 
 #define MCU                       STM32F401
 
@@ -127,9 +127,9 @@ extern "C" {
  *
  * From 0 to 15. Low numbers are high priority.
 @{*/
-#define IRQ_PRI_TIM_HR            (1 << 4)
-#define IRQ_PRI_EXT15             (1 << 4)    //Keyboard, while int above is not working
-#define IRQ_PRI_Y_SCAN            (2 << 4)    //Colunm rows from 8255 (MSX)
+#define IRQ_PRI_Y_SCAN            (1 << 4)    //Colunm rows from 8255 (MSX)
+#define IRQ_PRI_TIM_HR            (2 << 4)
+#define IRQ_PRI_EXT15             (2 << 4)    //Keyboard, while int above is not working
 #define IRQ_PRI_SYSTICK           (3 << 4)
 #define IRQ_PRI_USB               (4 << 4)
 #define IRQ_PRI_USART             (5 << 4)
@@ -279,18 +279,17 @@ enum ENDPOINT{
 #define Y3_PIN                    GPIO12      //port A10 (Y2) broken mirrored in Kicad design
 #define Y3_exti                   EXTI12
 #define Y2_PORT                   GPIOA       //port A10 (Y2) broken mirrored in Kicad design
-//#define Y2_PIN                  GPIO10      //port A10 (Y2) broken mirrored in Kicad design
 #define Y2_PIN                    GPIO11      //port A10 (Y2) broken mirrored in Kicad design
-#define Y2_exti                   EXTI4
+#define Y2_exti                   EXTI11
 #define Y1_PORT                   GPIOA
 #define Y1_PIN                    GPIO9
 #define Y1_exti                   EXTI9
 #define Y0_PORT                   GPIOA
 #define Y0_PIN                    GPIO8
 #define Y0_exti                   EXTI8
-#define CAPSLOCK_PORT             GPIOA
-#define CAPSLOCK_PIN              GPIO12
-#define CAPSLOCK_exti             EXTI12
+#define CAPSLOCK_PORT             GPIOB
+#define CAPSLOCK_PIN              GPIO4
+#define CAPSLOCK_exti             EXTI4
 #define KANA_PORT                 GPIOB
 #define KANA_PIN                  GPIO6
 #define KANA_exti                 EXTI6
@@ -352,8 +351,8 @@ enum ENDPOINT{
 #define INT_TIM2_PORT             GPIOA
 #define TIM2UIF_PIN               GPIO5       //A5
 #define Dbg_Yint_PORT             GPIOA
-#define Dbg_Yint0e1_PIN           GPIO6       //A6
-#define Dbg_Yint2e3_PIN           GPIO7       //A7
+#define Dbg_Yint0and1_PIN         GPIO6       //A6
+#define Dbg_Yint2and3_PIN         GPIO7       //A7
 
 //Available resources
 #define AVAILABLE_B0_PORT         GPIOB

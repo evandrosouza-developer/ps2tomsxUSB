@@ -91,13 +91,14 @@ int             usb_configured_prev;
 #endif  //#if USE_USB === true
 
 
+//Prototype area
+void end_of_code(uint32_t*);
+
 int main(void)
 {
-  //Query the reset cause
   uint32_t reset_org;
-  reset_org = RCC_CSR;
-  RCC_CSR = RCC_CSR_RMVF;
-  formerscancode = RCC_CSR;          //Only to avoid warnings of unused RCC_CSR variable
+  end_of_code(&reset_org);
+  //formerscancode = RCC_CSR;          //Only to avoid warnings of unused RCC_CSR variable
 
 #if MCU == STM32F103
   //Blue Pill
@@ -216,6 +217,8 @@ int main(void)
 
   systick_setup();
   
+  con_send_string((uint8_t*)". Independent Watch Dog Timer;\r\n");
+
   // Turn on the Independent WatchDog Timer
   iwdg_set_period_ms(100);  // 3 x sys_timer
   iwdg_start();
@@ -230,7 +233,7 @@ int main(void)
 
   ps2_keyb_detect();
 
-  con_send_string((uint8_t*)". Database with know-how to manage and interface PS/2 Keyboard to MSX;\r\n");
+  con_send_string((uint8_t*)". Database with know-how to manage and interface PS/2 Keyboard to MSX:\r\n");
   //Check the Database version, get y_dummy, ps2numlockstate and enable_xon_xoff
   database_setup();
 
@@ -381,3 +384,14 @@ int main(void)
 
   return 0; //Suppose never reach here
 } //int main(void)
+
+/// @brief Mark an end of code
+///
+/// @param *reset_org Pointer to get which was the cause of reset
+void end_of_code(uint32_t*reset_org)
+{
+  //Query the reset cause
+  *reset_org = RCC_CSR;
+  RCC_CSR = RCC_CSR_RMVF;
+} //int main(void)
+
