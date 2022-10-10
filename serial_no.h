@@ -1,4 +1,4 @@
-/** @defgroup 04 serial_no Compute_Serial_Number
+/** @defgroup 04 serial_no Read_Serial_Number
  *
  * @ingroup infrastructure_apis
  *
@@ -51,6 +51,7 @@ extern "C" {
 #define SERIAL_NO_H
 
 #include "system.h"
+#include "serial.h"
 
 void serialno_read(uint8_t*);
 

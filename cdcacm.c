@@ -1,4 +1,4 @@
-/** @addtogroup 09 USB USB_Group
+/** @addtogroup 06 USB USB_Group
  *
  * @ingroup infrastructure_apis
  *
@@ -54,7 +54,7 @@
 #if USE_USB == true
 usbd_device *usb_dev;
 int usb_configured;
-bool nak_cleared[6];
+bool nak_cleared[2][EP_UART_COMM_OUT];            //IN and OUT for first dimension and last defined OUT endpoint
 uint8_t usbd_control_buffer[4 * USBD_DATA_BUFFER_SIZE]; // Buffer to be used for control requests.
 /**
  * Defines the struct of transmit and receive buffers
@@ -185,7 +185,7 @@ static void cdcacm_con_data_rx_cb(usbd_device *usbd_dev, uint8_t ep)
     if(result > ((3 * (uart_tx_ring.bufSzMask + 1)) >> 2)) //X_OFF_TRIGGER
     {
       //Put EP in nak. On con_rx_ring read, check con_rx_ring room (X_ON_TRIGGER) to clear nak.
-      nak_cleared[EP_CON_DATA_OUT] = false;
+      nak_cleared[(EP_CON_DATA_OUT & USB_REQ_TYPE_IN) >> 8][EP_CON_DATA_OUT & ~USB_REQ_TYPE_IN] = false;
       usbd_ep_nak_set(usbd_dev, EP_CON_DATA_OUT, 1);
     }
   }
@@ -210,6 +210,9 @@ static void cdcacm_con_data_tx_cb(usbd_device *usbd_dev, uint8_t ep)
       buf[0] = data;
       for(i = 1; i < max_transf; i++)
       {
+        #if defined CHECK_INDEX
+        check_idx_u16(i, (uintptr_t)buf, USBD_DATA_BUFFER_SIZE);
+        #endif
         buf[i] = con_tx_ring.data[local_getptr++];
         local_getptr &= con_tx_ring.bufSzMask;
       }
@@ -218,6 +221,9 @@ static void cdcacm_con_data_tx_cb(usbd_device *usbd_dev, uint8_t ep)
     {
       for(i = 0; i < max_transf; i++)
       {
+        #if defined CHECK_INDEX
+        check_idx_u16(i, (uintptr_t)buf, USBD_DATA_BUFFER_SIZE);
+        #endif
         buf[i] = con_tx_ring.data[local_getptr++];
         local_getptr &= con_tx_ring.bufSzMask;
       }
@@ -279,6 +285,9 @@ static void cdcacm_uart_data_tx_cb(usbd_device *usbd_dev, uint8_t ep)
     local_getptr = uart_rx_ring.get_ptr;
     for(i = 0; i < max_transf; i++)
     {
+      #if defined CHECK_INDEX
+      check_idx_u16(i, (uintptr_t)buf, USBD_DATA_BUFFER_SIZE);
+      #endif
       buf[i] = uart_rx_ring.data[local_getptr++];
       local_getptr &= (uart_rx_ring.bufSzMask);
     }
@@ -332,6 +341,9 @@ void first_put_ring_content_onto_ep(struct sring *ring, uint8_t ep)
       max_transf = (len > (USBD_DATA_BUFFER_SIZE - 1)) ? (USBD_DATA_BUFFER_SIZE - 1) : len;
       for(i = 0; i < max_transf; i++)
       {
+        #if defined CHECK_INDEX
+        check_idx_u16(i, (uintptr_t)buf, USBD_DATA_BUFFER_SIZE);
+        #endif
         buf[i] = ring->data[local_getptr++];
         local_getptr &= ring->bufSzMask;
       }
@@ -382,14 +394,20 @@ static void usb_reset(void)
 void set_nak_endpoint(uint8_t ep)
 {
   usbd_ep_nak_set(usb_dev, ep, 1);
-  nak_cleared[ep] = false;
+  #if defined CHECK_INDEX
+  check_idx_u16(ep & (uint8_t)~USB_REQ_TYPE_IN, (uintptr_t)nak_cleared, sizeof(nak_cleared));
+  #endif
+  nak_cleared[(ep & USB_REQ_TYPE_IN) >> 8][ep & (uint8_t)~USB_REQ_TYPE_IN] = false;
 }
 
 
 void clear_nak_endpoint(uint8_t ep)
 {
   usbd_ep_nak_set(usb_dev, ep, 0);
-  nak_cleared[ep] = true;
+  #if defined CHECK_INDEX
+  check_idx_u16(ep & (uint8_t)~USB_REQ_TYPE_IN, (uintptr_t)nak_cleared, sizeof(nak_cleared));
+  #endif
+  nak_cleared[(ep & USB_REQ_TYPE_IN) >> 8][ep & (uint8_t)~USB_REQ_TYPE_IN] = true;
 }
 
 

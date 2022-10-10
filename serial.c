@@ -1,4 +1,4 @@
-/** @addtogroup 02 USART USART_Group
+/** @addtogroup 03 USART USART_Group
  *
  * @ingroup infrastructure_apis
  *
@@ -41,17 +41,17 @@
  */
 
 
-// See the inspiring file:
-// https://github.com/libopencm3/libopencm3-examples/blob/master/examples/stm32/f1/stm32-h103/usart_irq_printf/usart_irq_printf.c
+//Use Tab width=2
 
 #include "serial.h"
+
+// See the inspiring file:
+// https://github.com/libopencm3/libopencm3-examples/blob/master/examples/stm32/f1/stm32-h103/usart_irq_printf/usart_irq_printf.c
 
 bool enable_xon_xoff = true, xon_condition = true, xoff_condition = false, xonoff_sendnow = false;
 
 /**
- * @brief Defines uart buffers.
- * 
- * uart_tx, uart_rx and dma_rx.
+ * @brief Defines line_coding structure.
  * 
  */
 struct sring uart_tx_ring;
@@ -82,10 +82,6 @@ uint8_t con_rx_ring_buffer[CON_RX_RING_BUFFER_SIZE];
 extern  bool nak_cleared[6];                    //Declared on cdcacm.c
 extern  int usb_configured;                     //Declared on cdcacm.c
 #endif  //#if USE_USB == true
-/**
- * 
- * def ok_to_rx Semaphore to avoid Rx polution
- */
 bool  ok_to_rx;
 
 
@@ -330,6 +326,11 @@ void serial_rx_restart(void)
 }
 
 
+/** @brief If DMA is idle, it will be set to the "get pointer" of the uart_tx_ring.
+ *
+ * @param number_of_data Number of data bytes to DMA to send.
+This number will update the "get pointer" to restart TX.
+ */
 void do_dma_usart_tx_ring(uint16_t number_of_data)
 {
   if(!dma_get_number_of_data(USART_DMA_BUS, USART_DMA_TX_CH))
@@ -355,6 +356,9 @@ uint16_t ring_put_ch(struct sring *ring, uint8_t ch)
   i_next = (i + 1) & ring->bufSzMask; //i_next is the next position of i
   if(i_next != ring->get_ptr)
   {
+    #if defined CHECK_INDEX
+    check_idx_u16(i, (uintptr_t)ring->data, ring->bufSzMask+1);
+    #endif
     ring->data[i] = ch;     //saves in the put_ptr position 
     ring->put_ptr = i_next; //now put_ptr points to the next position of i
     //Optimizing calculations inside the interrupt => The general formula is:
@@ -652,12 +656,15 @@ uint8_t console_get_line(uint8_t *s, uint16_t len)
 //===========================Miscellaneous routines Group================================
 //=======================================================================================
 
-// Append an ASCIIZ (uint8_t) string at the end of String Mounting buffer.
+// Append an ASCIIZ (uint8_t) string at the end of str_mount_buff.
 void string_append(uint8_t *string_org, struct s_pascal_string *str_mount_buff)
 {
   uint16_t i = 0;
   while(string_org[i] && (str_mount_buff->str_len < (str_mount_buff->bufSzMask + 1)))
   {
+    #if defined CHECK_INDEX
+    check_idx_u16(str_mount_buff->str_len + 1, (uintptr_t)str_mount_buff, str_mount_buff->bufSzMask + 1);
+    #endif
     str_mount_buff->data[str_mount_buff->str_len++] = string_org[i];
     str_mount_buff->data[str_mount_buff->str_len] = 0;
     i++;
@@ -791,6 +798,27 @@ void conv_uint8_to_2a_hex(uint8_t value, uint8_t *outstring)
 }
 
 
+
+//Check if uint16_t index is inside bounds
+void check_idx_u16(uint16_t idx_u16, uintptr_t base_u32, uint16_t size)
+{
+  if(idx_u16 >= size)
+  {
+    uint8_t str_mount[16];
+    con_send_string((uint8_t*)"\r\nThis index is out-of-range: ");
+    conv_uint16_to_4a_hex(idx_u16, str_mount);
+    con_send_string((uint8_t*)str_mount);
+    con_send_string((uint8_t*)", while var base 0x");
+    conv_uint32_to_8a_hex(base_u32, str_mount);
+    con_send_string((uint8_t*)str_mount);
+    con_send_string((uint8_t*)" was created with a size of ");
+    conv_uint16_to_4a_hex(size, str_mount);
+    con_send_string((uint8_t*)str_mount);
+    con_send_string((uint8_t*)".");
+    idx_u16 = size;
+
+  }
+}
 //=======================================================================================
 //============================= To be used with printf ==================================
 //=======================================================================================
