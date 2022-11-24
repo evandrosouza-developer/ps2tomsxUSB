@@ -1,8 +1,14 @@
 # STM32: PS/2 to MSX Keyboard Converter
 
-First of all, welcome, bem-vindos, welkom, bienvenidos, добро пожаловать, 환영하다 and ようこそ to my repository, to people who used MSX in ancient times.
+# Introduction
 
-Instead of an application to an old computer standard, I made this to learn STM32 usage technics, and I'd like it to be useful and let us back in time and make our MSX computer jewlers work with joyful to our pleasure. The MSX Keyboard enviroment (PS/2 to MSX Keyboard Converter, MSX Keyboard subsystem Emilator and TIO - A simple terminal) is fully functional and debugged and here I used a lot of concepts that can be used as ideas to your applications.
+First of all, to people who used MSX, welcome, bem-vindos, welkom, bienvenidos, добро пожаловать, 환영하다 and ようこそ, to visit my repository.
+
+Instead of an application to this old japanese home computer standards is not so widely useful in nowadays, I made this to learn STM32 hardware and software technics, and I'd like it to be useful and let us back in time and make our MSX computer jewlers work with joyful to our pleasure.
+
+The MSX Keyboard enviroment components (PS/2 to MSX Keyboard Converter, MSX Keyboard subsystem Emilator and the modifyed TIO - A simple terminal) are fully functional and debugged and here I used a lot of concepts that, IMHO could be used as idea sources to your applications.
+
+# Lets do it!
 
 This interface has the function of connect a PS/2 keyboard (or a USB one in compatibility mode) as source to zero active matrix based computers, like MSX and ZX-Spectrum as destination. It is meant to connect a keyboard, which only provides a PS/2 connector, to a MSX (or any one that have a up to 15 active columns and reads zeroes througth 8 bits - up to 15 x 8 matrix) computer.
 
@@ -78,14 +84,22 @@ make TARGETS='stm32/f1 stm32/f4'
 ```
 
 Go to your PS/2 to MSX Converter Tester project folder and assure that you choose the right target MCU in the system.h file line 69, and make, as follows:
+
+With a text editor:
 ```
 #define MCU                       STM32F401
 or
 #define MCU                       STM32F103
-
-make
 ```
 
+Save the file, and,
+
+Create the image file to be sent to the MCU (Micro Controller Unit):
+
+```
+make
+```
+The created image compiled with a GNU Toolchain for the Arm Architecture 11.2-2022.02 (arm-11.16) version on an aarch64 debian bullseye linux computer is created with the following characteristics, according to the choosen MCU:
 ```
 arm-none-eabi-size ps2-msx-kb-convF4.elf
    text	   data	    bss	    dec	    hex	filename
