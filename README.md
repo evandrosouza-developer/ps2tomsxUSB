@@ -1,8 +1,12 @@
 # STM32: PS/2 to MSX Keyboard Converter
 
-This interface has the function of connect a PS/2 keyboard as source to zero active matrix based computers, like MSX and ZX-Spectrum as destination. It is meant to connect a keyboard, which only provides a PS/2 connector, to a MSX (or any one that have a up to 15 active columns and reads zeroes througth 8 bits - up to 15 x 8 matrix) computer.
+First of all, welcome, bem-vindos, welkom, bienvenidos, добро пожаловать, 환영하다 and ようこそ to my repository, to people who used MSX in ancient times.
 
-The differencial of this design is to allow user to customize and update the database layout of this PS/2 Keyboard, as like as the MSX one, through an USB (or serial) interface and a tty terminal on host side.
+Instead of an application to an old computer standard, I made this to learn STM32 usage technics, and I'd like it to be useful and let us back in time and make our MSX computer jewlers work with joyful to our pleasure. The MSX Keyboard enviroment (PS/2 to MSX Keyboard Converter, MSX Keyboard subsystem Emilator and TIO - A simple terminal) is fully functional and debugged and here I used a lot of concepts that can be used as ideas to your applications.
+
+This interface has the function of connect a PS/2 keyboard (or a USB one in compatibility mode) as source to zero active matrix based computers, like MSX and ZX-Spectrum as destination. It is meant to connect a keyboard, which only provides a PS/2 connector, to a MSX (or any one that have a up to 15 active columns and reads zeroes througth 8 bits - up to 15 x 8 matrix) computer.
+
+The differencial of this design is to allow user to customize and update the database layout of this PS/2 Keyboard, as like as the MSX one, through an USB (or async serial) interface and a tty terminal on host side.
 
 To edit the Database file, both source and target keyboard layouts, I prepaired a dedicated "key assembler in excel", so I can boldly recommend you to use the excel file `PS2toMSX-BR Mapping220901.xlsm` available at github page.
 
