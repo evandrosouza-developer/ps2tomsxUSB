@@ -77,9 +77,10 @@ Obs.: If you plan to keep only one copy of LibopenCM3 in your computer, I really
 
 After cloning the repository you need to make the following preparations:
 
-Go to libopencm3 you cloned (eg: cd libopencm3) and prepares it to use by typing:
+Go to libopencm3 you cloned (eg: cd libopencm3) and make it to be useful by typing:
 
 ```
+cd libopencm3
 make TARGETS='stm32/f1 stm32/f4'
 ```
 
