@@ -14,7 +14,7 @@ This interface has the function of connect a PS/2 keyboard (or a USB one in comp
 
 The differencial of this design is to allow user to customize and update the database layout of this PS/2 Keyboard, as like as the MSX one, through an USB (or async serial) interface and a tty terminal on host side.
 
-To edit the Database file, both source and target keyboard layouts, I prepaired a dedicated "key assembler in excel", so I can boldly recommend you to use the excel file `PS2toMSX-BR Mapping220901.xlsm` available at github page.
+To edit the Database file, both source and target keyboard layouts, I prepaired a dedicated "key assembler in excel", so I can boldly recommend you to use the excel file `PS2toMSX_Database_Compiler.xlsm` available at github page.
 
 The default database mappings for the keyboard layouts are:
 
