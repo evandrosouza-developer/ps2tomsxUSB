@@ -100,15 +100,15 @@ Create the image file to be sent to the MCU (Micro Controller Unit):
 ```
 make
 ```
-The created image compiled with a GNU Toolchain for the Arm Architecture 11.2-2022.02 (arm-11.16) version on an aarch64 debian bullseye linux computer is created with the following characteristics, according to the choosen MCU:
+The created image compiled with an Arm GNU Toolchain 12.2.MPACBTI-Bet1 (Build arm-12-mpacbti.16)) 12.2.0 version on an aarch64 debian bullseye linux computer is created with the following characteristics, according to the choosen MCU:
 ```
 arm-none-eabi-size ps2-msx-kb-convF4.elf
    text	   data	    bss	    dec	    hex	filename
-  35720    1128    8132   44980    afb4 ps2-msx-kb-convF4.elf
+  35540	     60	   8120	  43720	   aac8	ps2-msx-kb-convF4.elf
 
 arm-none-eabi-size ps2-msx-kb-convF1.elf
    text	   data	    bss	    dec	    hex	filename
-  27100    1096    2196   30392    76b8 ps2-msx-kb-convF1.elf
+  26896	     24	   2176	  29096	   71a8	ps2-msx-kb-convF1.elf
 
 ```
 
