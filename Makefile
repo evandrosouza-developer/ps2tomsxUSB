@@ -20,7 +20,7 @@
 ##
 
 BINARY = ps2-msx-kb-conv
-OBJS = msxmap.o ps2handl.o dbasemgt.o get_intelhex.o sys_timer.o serial_no.o cdcacm.o serial.o hr_timer.o SpecialFaultHandlers.o
+OBJS = msxmap.o ps2handl.o dbasemgt.o get_intelhex.o sys_timer.o serial_no.o cdcacm.o serial.o hr_timer.o SpecialFaultHandlers.o newlib_warning_fix.o
 
 #######=== First step: Identify target inside the Design config file ===########
 DSN_CONF_FILE = system.h
