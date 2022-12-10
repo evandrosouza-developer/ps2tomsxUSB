@@ -200,9 +200,6 @@ extern "C" {
 
 #endif  //#if USE_USB == true
 
-/*  Index of each USB interface. Must be consecutive and must sync with interfaces[].*/
-/*  Index of each USB interface. Must be consecutive and must sync with interfaces[].*/
-/* Index of each USB interface. Must be consecutive and must sync with interfaces[]. */
 /**  Index of each USB interface.
  *
  * Must be consecutive and must sync with interfaces[].
@@ -583,7 +580,7 @@ enum ENDPOINT{
 #define USART_DMA_TX_IRQ          NVIC_DMA1_CHANNEL4_IRQ
 #define ISR_DMA_CH_USART_TX       void dma1_channel4_isr(void)
 #define USART_DMA_RX_CH           DMA_CHANNEL5
-#defin                                                                                                                e USART_DMA_RX_IRQ          NVIC_DMA1_CHANNEL5_IRQ
+#define USART_DMA_RX_IRQ          NVIC_DMA1_CHANNEL5_IRQ
 #define ISR_DMA_CH_USART_RX       void dma1_channel5_isr(void)
 #endif  //#if (USART_PORT == USART1)
 
