@@ -260,82 +260,52 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 
 The structure of the Database is:
 
-	There are 320 lines, so this structure is capable of manage up to 159 PS/2 keys with their respective make and break codes. The first and last lines are reserved for control (Database version, Database unavailable: seek next, double consistensy check, among others);
+	There are 320 lines, so this structure is capable of manage up to 159 PS/2 keys with their respective make and break codes.
+
+	The first and last lines are reserved for control (Database version, Database unavailable: seek next, double consistensy
+	check, among others);
 	
 	On the first line there are information related to this Database version:
-
 	- Bytes 0, 1 and 2: Database version ("0x01", "0x00", "0xFF")
-
 	- Byte 3: Mapped function. Description:
-
 	    (bit 7-6): Reserved - keep it at high state;
-
 	    (bit 5): default value of enable_xon_xoff;
-
 	    (bit 4): default value of ps2numlockstate at power up;
-
 	    (bits 3-0): y_dummy (non valid colunm);
-	    
 	- Bytes 4-7: Reeserved - Keep it as 0xFFFFFFFF;
 
-	The  three first columns of each line are the mapped scan codes;
-
 	On the line 319 (the last one) there are information related to this Database integrity:
-
 	- Bytes 0-5: Reeserved - Keep each byte as 0xFF;
-
 	- Byte 6: CheckSum (Integrity);
-
 	- Byte 7: bcc (a type of vertical parity used for integrity);
-
-
 
 	Starting on line 1, the raw of the Database:
   
+	The three first columns of each line are the mapped scan codes;
 	The 4th column is The Control Byte, detailed bellow:
-  
 	CONTROL BYTE:
-  
 		High nibble is Reserved;
-    
 		(bit 3) Combined Shift;
-    
 		(bit 2) Reserved-Not used;
-    
 		(bits 1-0) Modifyer Type:
-    
 		.0 - Default mapping
-    
 		.1 - NumLock Status+Shift changes
-    
 		.2 - PS/2 Shift
-    
 		.3 - Reserved-Not used
-    
-	
-	This table has 3 modifyers: Up two MSX keys are considered to each mapping behavior modifying:
-  
-	
-	5th and 6th columns have the mapping ".0 - Default mapping";
-  
-	7th and 8th columns share mappings   ".1" and ".2":
 
+	This table has 3 modifyers: Up two MSX keys are considered to each mapping behavior modifying:
+	5th and 6th columns have the mapping ".0 - Default mapping";
+	7th and 8th columns share mappings   ".1" and ".2":
 	                                     ".1 - NumLock Status+Shift changes";
-  
-	                                     ".2 - PS/2 Shift", where I need to release the sinalized Shift in PS/2 to the MSX and put the coded key, and so, release them, reapplying the Shift key, deppending on the initial state;
-  
-		
+	                                     ".2 - PS/2 Shift", where I need to release the sinalized Shift in PS/2 to the MSX and put the
+					           coded key, and so, release them, reapplying the Shift key, deppending on the initial state;
+
 	Each column has a MSX coded key, with the follwing structure:
-  
 	(Bit 7:4) MSX Y PPI 8255 PC3:0 is send to an OC outputs BCD decoder, for example:
-  
-					 In the case of Hotbit HB8000, the keyboard scan is done as a 9 columns scan, CI-16 7445N 08 to 00;
-           
-					 If equals to 1111 (Y=15), there is no MSX key mapped.
-           
-	(Bit 3)	 0: keypress
-  
-					 1: key release;
+					     In the case of Hotbit HB8000, the keyboard scan is done as a 9 columns scan, CI-16 7445N 08 to 00;
+					     If equals to 1111 (Y=15), there is no MSX key mapped.
+					     (Bit 3)	 0: keypress
+ 							 1: key release;
            
 	(Bit 2:0) MSX X, ie, which bit will carry the key, to be read by PPI 8255 PB7:0.
 	
