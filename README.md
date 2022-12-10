@@ -63,7 +63,7 @@ Because Blue Pill has no 5V tolerant pins available to connect PS/2 + MSX + Seri
 Although, this limitation came with a bonus: The need of a cheaper and greater avaiability 32KB flash MCU: STM32F103C6T6
 
 
-## Dependencies
+# Dependencies
 
 - `arm-none-eabi-gcc`
 - `arm-none-eabi-gdb`
@@ -73,7 +73,7 @@ Although, this limitation came with a bonus: The need of a cheaper and greater a
 
 Obs.: If you plan to keep only one copy of LibopenCM3 in your computer, I really suggest you to create the variable OPENCM3_DIR in our system enviroment.
 
-## Preparations
+# Preparations
 
 After cloning the repository you need to make the following preparations:
 
@@ -112,6 +112,8 @@ arm-none-eabi-size ps2-msx-kb-convF1.elf
 
 ```
 
+
+# Hardware and Setup
 
 ## Hardware and Setup for Blue Pill:
 
@@ -256,7 +258,7 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
   *******************************************************************************************************
 
 
-## Technical details about the Database structure
+# Technical details about the Database structure
 
 The structure of the Database is:
 
@@ -310,7 +312,7 @@ The structure of the Database is:
 	(Bit 2:0) MSX X, ie, which bit will carry the key, to be read by PPI 8255 PB7:0.
 	
 
-## Download your code to hardware
+# Download your code to hardware
 
 Use a ST-Link v2 Programmer (or similar), Black Magic Probe or another Serial Wire supported tool to flash the program using `make flash` onto the STM32.
 
