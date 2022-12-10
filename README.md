@@ -256,7 +256,7 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
   *******************************************************************************************************
 
 
-## Technical detail of the Database structure
+## Technical details about the Database structure
 
 The structure of the Database is:
 
