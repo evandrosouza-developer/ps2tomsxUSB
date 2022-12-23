@@ -64,12 +64,12 @@ static const char *usb_strings[] = {
   "Evandro Rodrigues de Souza Technologies",
   BOARD_IDENT,
   serial_no,
-  "Emulator Equipment Console",               //  Console Port
-  "Emulator Equipment Console ACM Port",      //  Console ACM Port
-  "Emulator Equipment Console DataPort",      //  Console DATA Port
-  "Emulator Equipment USB <-> Serial",        //  Serial Port
-  "Emulator Equipment USB-Serial ACM Port",   //  Serial ACM Port
-  "Emulator Equipment USB-Serial DataPort",   //  Serial DATA Port
+  "PS/2 to MSX Keyboard Converter Console",               //  Console Port
+  "PS/2 to MSX Keyboard Converter Console ACM Port",      //  Console ACM Port
+  "PS/2 to MSX Keyboard Converter Console DataPort",      //  Console DATA Port
+  "PS/2 to MSX Keyboard Converter USB <-> Serial",        //  Serial Port
+  "PS/2 to MSX Keyboard Converter USB-Serial ACM Port",   //  Serial ACM Port
+  "PS/2 to MSX Keyboard Converter USB-Serial DataPort",   //  Serial DATA Port
 };
 
 #define NUM_STRINGS (sizeof(usb_strings) / sizeof(usb_strings[0]))

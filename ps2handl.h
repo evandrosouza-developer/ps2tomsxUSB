@@ -116,6 +116,7 @@ void ps2_update_leds(bool num, bool caps, bool scroll);
 /**
  * @brief Checks if PS/2 Keyboard is responding to echo command
  * 
+ * @return true if PS/2 Keyboard is alive
  */
 bool keyboard_check_alive(void);
 

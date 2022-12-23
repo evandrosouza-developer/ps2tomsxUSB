@@ -104,11 +104,11 @@ The created image compiled with an Arm GNU Toolchain 12.2.MPACBTI-Bet1 (Build ar
 ```
 arm-none-eabi-size ps2-msx-kb-convF4.elf
    text	   data	    bss	    dec	    hex	filename
-  35540	     60	   8120	  43720	   aac8	ps2-msx-kb-convF4.elf
+  35676      60    8120   43856    ab50 ps2-msx-kb-convF4.elf
 
 arm-none-eabi-size ps2-msx-kb-convF1.elf
    text	   data	    bss	    dec	    hex	filename
-  26896	     24	   2176	  29096	   71a8	ps2-msx-kb-convF1.elf
+  26956      24    2176   29156    71e4 ps2-msx-kb-convF1.elf
 
 ```
 

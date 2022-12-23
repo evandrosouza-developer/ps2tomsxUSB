@@ -55,19 +55,7 @@
 //no hardware flow control
 
 
-#include <libopencm3/stm32/usart.h>
-#include <libopencm3/stm32/flash.h>
-#include <libopencm3/stm32/gpio.h>
-
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-#include "system.h"
-#include "serial.h"
 #include "dbasemgt.h"
-#include "database.c"
-#include "get_intelhex.h"
 
 
 //Processor related sizes and adress:
@@ -77,7 +65,6 @@
 #define RESULT_OK                 0
 
 //Global var area:
-//uint8_t         flash_buffer_ram[DATABASE_SIZE];
 bool            flash_locked, compatible_database;
 extern uint8_t  UNUSED_DATABASE[DB_NUM_COLS];     //Declared on msxmap.cpp
 extern uint32_t *base_of_database;                //Declared on msxmap.cpp
@@ -86,11 +73,12 @@ extern uint8_t  y_dummy;                          //Declared on msxmap.cpp
 extern bool     enable_xon_xoff;                  //Declared on serial.c
 extern bool     ps2numlockstate;                  //Declared on ps2handl.c
 
+
+
 #if MCU == STM32F103
 
 
 //Prototype area:
-//flash operations
 uint32_t flash_program_data(uint8_t*);
 void check_flash_error(void);
 void check_flash_locked(void);
@@ -584,13 +572,8 @@ uint32_t flash_program_data(uint8_t *flash_buffer_ram)
 #endif  //#if MCU == STM32F103
 
 
+
 #if MCU == STM32F401
-#include "ps2handl.h"
-
-
-//Processor related sizes and adress:
-#define FLASH_WRONG_DATA_WRITTEN  0x80
-#define RESULT_OK                 0
 
 //Ref.: RM0368 Rev 5 manual, item 3.8.2, Flash key register (FLASH_KEYR) - Page 61/847..
 //Some "stranger thing" occurred here in libopencm3, as it linked wrong definitions.
@@ -614,14 +597,14 @@ extern uint32_t systicks;                         //Declared on sys_timer.cpp
 
 void database_setup(void)
 {
-  uint8_t ch, str_mount[STRING_MOUNT_BUFFER_SIZE];
-  uint32_t iter;
-  volatile uint32_t*base_of_database32;
-  volatile uint8_t*base_of_database8;
-  void *void_ptr;
-  bool sector_erased = true;
-  uint16_t attempts_erasing_sector;
-
+  uint8_t           ch, str_mount[STRING_MOUNT_BUFFER_SIZE];
+  uint32_t          iter;
+  volatile uint32_t *base_of_database32;
+  volatile uint8_t  *base_of_database8;
+  void              *void_ptr;
+  uint16_t          attempts_erasing_sector;
+  bool              sector_erased = true;
+  
   void_ptr = &str_mount;
 
   if (!ps2_keyb_detected) // The user request to force init Database is done only if there is no keyboard

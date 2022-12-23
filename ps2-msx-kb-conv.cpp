@@ -76,7 +76,7 @@ extern uint32_t systicks;                         //Declared on sys_timer.cpp
 extern bool     mount_scancode_OK;                //Declared on ps2handl.c
 extern bool     ps2_keyb_detected;                //Declared on ps2handl.c
 extern bool     ps2numlockstate;                  //Declared on ps2handl.c
-extern bool     command_ok, ps2int_RX_bit_idx;    //Declared on ps2handl.c
+extern bool     command_running, ps2int_RX_bit_idx;//Declared on ps2handl.c
 extern bool     caps_state, kana_state;           //Declared on ps2handl.c
 extern bool     caps_former, kana_former;         //Declared on ps2handl.c
 extern bool     update_ps2_leds;                  //Declared on msxmap.cpp
@@ -254,7 +254,7 @@ int main(void)
     //Disables all interrupts but systicks and USART
     exti_disable_request(Y3_exti | Y2_exti | Y1_exti | Y0_exti);
     timer_disable_irq(TIM_HR, TIM_DIER_CC1IE | TIM_DIER_UIE);
-    exti_disable_request(PS2_CLOCK_EXTI);
+    exti_disable_request(PS2_CLK_I_EXTI);
 
     //Read the MSX Database Table Intel Hex by serial (or USB when available) and flashes 2560 bytes, from 0x08007600 to 0x08007FFF
     //Up to 3 databases can be put in flash without need to erase. It is automatically managed.
@@ -350,7 +350,7 @@ int main(void)
       do_next_keep_alive = true;
 
     //The second functionality running in main loop: Update the keyboard leds
-    if( command_ok  &&    //Only does led update when the previous one is concluded
+    if( !command_running  &&    //Only does led update when the previous one is concluded
         update_ps2_leds )
     {
       update_ps2_leds = false;

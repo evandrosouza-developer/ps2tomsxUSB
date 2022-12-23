@@ -141,10 +141,11 @@ extern "C" {
 /** General definitions about timings
  *
  * Timings used by systick and timeout of user input in user entry of Database update
- */
+@{*/
 #define FREQ_INT_SYSTICK          30
 #define MAX_TIMEOUT2RX_INTEL_HEX  11 * FREQ_INT_SYSTICK
 #define MAX_TIMEOUT2AMPERSAND     6  * FREQ_INT_SYSTICK
+/**@}*/
 
 
 /* USB related definitions */
@@ -177,6 +178,8 @@ extern "C" {
 #define USB_RCC_CRC               RCC_CRC
 #endif  //#if MCU == STM32F401CC
 
+#undef  USB_REQ_TYPE_IN
+#define USB_REQ_TYPE_IN           0x80
 #define OTG_DCTL                  0x804
 #define OTG_FS_DCTL               MMIO32(USB_OTG_FS_BASE + OTG_DCTL)
 #define OTG_FS_DCTL_SDIS          1<<1        //0: Normal operation. 2: The core generates a device disconnect event to the USB host.
@@ -200,6 +203,9 @@ extern "C" {
 
 #endif  //#if USE_USB == true
 
+/*  Index of each USB interface. Must be consecutive and must sync with interfaces[].*/
+/*  Index of each USB interface. Must be consecutive and must sync with interfaces[].*/
+/* Index of each USB interface. Must be consecutive and must sync with interfaces[]. */
 /**  Index of each USB interface.
  *
  * Must be consecutive and must sync with interfaces[].
@@ -222,7 +228,7 @@ enum ENDPOINT{
   EP_UART_DATA_OUT,                           //CDC Data OUT of SECOND endpoint
   EP_UART_COMM_OUT,                           //CDC Command of SECOND endpoint: uses this as +0x80
   //CDC Data IN of First endpoint. (0x80=USB_REQ_TYPE_IN)
-  EP_CON_DATA_IN  =               EP_CON_DATA_OUT |               0x80,     
+  EP_CON_DATA_IN  =               EP_CON_DATA_OUT | USB_REQ_TYPE_IN,
   EP_CON_COMM_IN,                             //First endpoint: valid add CDC Command 
   EP_UART_DATA_IN,                            //CDC Data IN of Second endpoint
   EP_UART_COMM_IN,                            //Second endpoint: CDC Command
@@ -251,7 +257,7 @@ enum ENDPOINT{
  *
  @{*/ 
 #define HARDWARE_BASE             "Blue Pill (STM32F103C6 C8T6 and up)"
-#define PS2_CLK_INTERRUPT         TIMxCC1_INT
+#define PS2_CLOK_INTERRUPT        TIMxCC1_INT
 #define USART_PORT                USART2
 #define EMBEDDED_LED_PORT         GPIOC
 #define EMBEDDED_LED_PIN          GPIO13
@@ -333,9 +339,11 @@ enum ENDPOINT{
 
 #define PS2_DATA_PORT             GPIOB
 #define PS2_DATA_PIN              GPIO7
-#define PS2_CLOCK_PORT            GPIOA
-#define PS2_CLOCK_PIN             GPIO15
-#define PS2_CLOCK_EXTI            EXTI15
+#define PS2_CLK_I_PORT            GPIOA
+#define PS2_CLK_I_PIN             GPIO15
+#define PS2_CLK_I_EXTI            EXTI15
+#define PS2_CLK_O_PORT            GPIOA       //Same pin of PS2_CLK_I_PIN
+#define PS2_CLK_O_PIN             GPIO15      //Same pin of PS2_CLK_I_PIN
 #define PS2_POWER_CTR_PORT        GPIOB 
 #define PS2_POWER_CTR_PIN         GPIO1
 
@@ -371,7 +379,7 @@ enum ENDPOINT{
  * 
  @{*/ 
 #define USART_PORT                USART1
-#define PS2_CLK_INTERRUPT         GPIO_INT
+#define PS2_CLOK_INTERRUPT         GPIO_INT
 #define HARDWARE_BASE             "WeAct MiniF4 - Black Pill v2.0+ (STM32F401CxU6)"
 #define EMBEDDED_LED_PORT         GPIOC
 #define EMBEDDED_LED_PIN          GPIO13
@@ -437,9 +445,11 @@ enum ENDPOINT{
 
 #define PS2_DATA_PORT             GPIOB
 #define PS2_DATA_PIN              GPIO5
-#define PS2_CLOCK_PORT            GPIOA
-#define PS2_CLOCK_PIN             GPIO15
-#define PS2_CLOCK_EXTI            EXTI15
+#define PS2_CLK_I_PORT            GPIOA
+#define PS2_CLK_I_PIN             GPIO15
+#define PS2_CLK_I_EXTI            EXTI15
+#define PS2_CLK_O_PORT            GPIOB
+#define PS2_CLK_O_PIN             GPIO7
 #define PS2_POWER_CTR_PORT        GPIOA
 #define PS2_POWER_CTR_PIN         GPIO4 
 

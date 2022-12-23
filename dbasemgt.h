@@ -50,6 +50,20 @@
 extern "C" {
 #endif
 
+#include <libopencm3/stm32/usart.h>
+#include <libopencm3/stm32/flash.h>
+#include <libopencm3/stm32/gpio.h>
+
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "system.h"
+#include "serial.h"
+#include "database.c"
+#include "get_intelhex.h"
+
+
 /*entry point*/
 /** 
  * @brief Inits Database update process

@@ -68,8 +68,8 @@ void tim_hr_setup(uint32_t timer_peripheral)
   nvic_set_priority(NVIC_TIM2_IRQ, IRQ_PRI_TIM_HR);
 
   //Configuring PA15 as input and Alternate function of T2C1
-  //gpio_mode_setup(PS2_CLOCK_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, PS2_CLOCK_PIN);  //Default config
-  //gpio_set_af(PS2_CLOCK_PORT, GPIO_AF1, PS2_CLOCK_PIN);
+  //gpio_mode_setup(PS2_CLK_I_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, PS2_CLK_I_PIN);  //Default config
+  //gpio_set_af(PS2_CLK_I_PORT, GPIO_AF1, PS2_CLK_I_PIN);
 
   /* Timer global mode:
    * - Prescaler = 84 (Prescler module=83)
