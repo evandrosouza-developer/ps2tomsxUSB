@@ -127,12 +127,12 @@ void power_on_ps2_keyboard()
   gpio_set(PS2_CLK_O_PORT, PS2_CLK_O_PIN); //Hi-Z
   gpio_set_output_options(PS2_CLK_O_PORT, GPIO_OTYPE_OD, GPIO_OSPEED_100MHZ, PS2_CLK_O_PIN);
   gpio_mode_setup(PS2_CLK_O_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, PS2_CLK_O_PIN);
-#if PS2_CLOK_INTERRUPT == GPIO_INT
+#if PS2_CLK_INTERRUPT == GPIO_INT
   exti_select_source(PS2_CLK_I_EXTI, PS2_CLK_I_PORT);
   exti_set_trigger(PS2_CLK_I_EXTI, EXTI_TRIGGER_FALLING);
   exti_reset_request(PS2_CLK_I_EXTI);
   exti_enable_request(PS2_CLK_I_EXTI);
-#endif //#if PS2_CLOK_INTERRUPT == GPIO_INT
+#endif //#if PS2_CLK_INTERRUPT == GPIO_INT
   gpio_port_config_lock(PS2_CLK_I_PORT, PS2_CLK_I_PIN);
   gpio_port_config_lock(PS2_CLK_O_PORT, PS2_CLK_O_PIN);
 #endif  //#if MCU == STM32F401
@@ -163,12 +163,12 @@ void power_on_ps2_keyboard()
 
   gpio_set(PS2_POWER_CTR_PORT, PS2_POWER_CTR_PIN);  //Turn on PS/2 Keyboard
 
-#if PS2_CLOK_INTERRUPT == GPIO_INT
+#if PS2_CLK_INTERRUPT == GPIO_INT
   // Enable EXTI15_10 interrupt.
   nvic_enable_irq(NVIC_EXTI15_10_IRQ);
   //High priority to avoid PS/2 interrupt loss
   nvic_set_priority(NVIC_EXTI15_10_IRQ, IRQ_PRI_EXT15);
-#endif //#if PS2_CLOK_INTERRUPT == GPIO_INT
+#endif //#if PS2_CLK_INTERRUPT == GPIO_INT
 
   //Starts with RX state: PS2INT_RECEIVE
   ps2int_state = PS2INT_RECEIVE;
@@ -484,7 +484,7 @@ void send_start_bit_next(uint16_t x_usec)
 void send_start_bit_now(void)
 {
   timer_disable_irq(TIM_HR, TIM_DIER_CC1IE);  // Disable interrupt on Capture/Compare1, but keeps on overflow
-#if PS2_CLOK_INTERRUPT == GPIO_INT
+#if PS2_CLK_INTERRUPT == GPIO_INT
   exti_disable_request(PS2_CLK_I_EXTI);
 #endif  
   command_running = true; //Here command_OK is initialized
@@ -515,7 +515,7 @@ void send_start_bit3(void) //Third part of send_start_bit
   ps2int_TX_bit_idx = 0;  // In TX Int, as we don't manage start bit inside int, idx can start with 0.
 
   prepares_capture(TIM_HR);
-#if PS2_CLOK_INTERRUPT == GPIO_INT
+#if PS2_CLK_INTERRUPT == GPIO_INT
   exti_reset_request(PS2_CLK_I_EXTI);
   exti_enable_request(PS2_CLK_I_EXTI);
 #endif  
@@ -1150,7 +1150,7 @@ void put_pullups_on_non_used_pins(void)
 #if MCU == STM32F401
 void exti15_10_isr(void) // PS/2 Clock
 {
-#if PS2_CLOK_INTERRUPT == GPIO_INT
+#if PS2_CLK_INTERRUPT == GPIO_INT
   //Now starts PS2Clk interrupt handler
   //Debug & performance measurement
   gpio_clear(INT_PS2_PORT, INT_PS2_PIN); //Signs start of interruption
@@ -1164,6 +1164,6 @@ void exti15_10_isr(void) // PS/2 Clock
   }
   //Debug & performance measurement
   gpio_set(INT_PS2_PORT, INT_PS2_PIN); //Signs end of interruption. Default condition is "1"
-#endif  //#if PS2_CLOK_INTERRUPT == GPIO_INT
+#endif  //#if PS2_CLK_INTERRUPT == GPIO_INT
 }
 #endif  //#if MCU == STM32F401

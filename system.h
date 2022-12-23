@@ -257,7 +257,7 @@ enum ENDPOINT{
  *
  @{*/ 
 #define HARDWARE_BASE             "Blue Pill (STM32F103C6 C8T6 and up)"
-#define PS2_CLOK_INTERRUPT        TIMxCC1_INT
+#define PS2_CLK_INTERRUPT        TIMxCC1_INT
 #define USART_PORT                USART2
 #define EMBEDDED_LED_PORT         GPIOC
 #define EMBEDDED_LED_PIN          GPIO13
@@ -379,7 +379,7 @@ enum ENDPOINT{
  * 
  @{*/ 
 #define USART_PORT                USART1
-#define PS2_CLOK_INTERRUPT         GPIO_INT
+#define PS2_CLK_INTERRUPT         GPIO_INT
 #define HARDWARE_BASE             "WeAct MiniF4 - Black Pill v2.0+ (STM32F401CxU6)"
 #define EMBEDDED_LED_PORT         GPIOC
 #define EMBEDDED_LED_PIN          GPIO13
