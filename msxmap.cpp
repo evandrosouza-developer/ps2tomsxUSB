@@ -959,7 +959,7 @@ void msxmap::compute_x_bits_and_check_interrupt_stuck (
     // First I have to disable Y_SCAN interrupts, to avoid misspelling due to updates
     exti_disable_request(Y3_exti | Y2_exti | Y1_exti | Y0_exti);
 #if MCU == STM32F401
-    // Read the MSX keyboard Y scan through G5PIO pins A5:A8, mask to 0 other bits and rotate right 5
+    // Read the MSX keyboard Y scan through GPIO pins A5:A8, mask to 0 other bits and rotate right 5
     msx_Y_scan = (gpio_port_read(Y0_PORT) & Y_MASK) >> 5;
     
     if(Y_XLAT_TABLE[y_local] == msx_Y_scan)

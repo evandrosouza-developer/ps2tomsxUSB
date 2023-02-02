@@ -22,8 +22,8 @@ serial.h                Header file of serial.c.
 cdcacm.c                Setup and run specific routines to interface to USB.
 cdcacm.h                Header file of cdcacm.c.
 usb_descriptors.h       USB descriptors. It is a  header file for cdcacm.c.
-newlib_warning_fix.c	Fix warnings of "not implemented and will always fail" on reentrant calls of NEWLIB from August 8th, 2022, on version 11.3 Rel1.
-newlib_warning_fix.h	Header file of newlib_warning_fix.c
+newlib_warning_fix.c    Fix warnings of "not implemented and will always fail" on reentrant calls of NEWLIB from August 8th, 2022, on version 11.3 Rel1.
+newlib_warning_fix.h    Header file of newlib_warning_fix.c
 Makefile                Cores M3 and M4 common Makefile.
 rules.mk                Extension part for the Cores M3 and M4 Makefile.
 stm32f103x6msx.ld       Tuned linker memory definitions for STM32F103C6T6 and up (Core M3) to alloc the Database at the Flash top.

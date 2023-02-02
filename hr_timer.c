@@ -286,14 +286,14 @@ void tim2_isr(void)
   if (timer_get_flag(TIM2, TIM_SR_UIF))
   {
     //Debug & performance measurement
-    gpio_clear(INT_TIM2_PORT, TIM2UIF_PIN); //Signs start of interruption
+    gpio_clear(TIM2UIF_PORT, TIM2UIF_PIN); //Signs start of interruption
 
     // Clear timer Update Interrupt Flag
     timer_clear_flag(TIM2, TIM_SR_UIF);
     next_routine();
 
     //Debug & performance measurement
-    gpio_set(INT_TIM2_PORT, TIM2UIF_PIN); //Signs end of interruption
+    gpio_set(TIM2UIF_PORT, TIM2UIF_PIN); //Signs end of interruption
   } //if (timer_get_flag(TIM2, TIM_SR_UIF))
   else if (timer_get_flag(TIM2, TIM_SR_CC1IF))
   {

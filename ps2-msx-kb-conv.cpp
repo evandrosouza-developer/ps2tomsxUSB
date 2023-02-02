@@ -98,7 +98,6 @@ int main(void)
 {
   uint32_t reset_org;
   end_of_code(&reset_org);
-  //formerscancode = RCC_CSR;          //Only to avoid warnings of unused RCC_CSR variable
 
 #if MCU == STM32F103
   //Blue Pill

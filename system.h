@@ -203,9 +203,8 @@ extern "C" {
 
 #endif  //#if USE_USB == true
 
-/*  Index of each USB interface. Must be consecutive and must sync with interfaces[].*/
-/*  Index of each USB interface. Must be consecutive and must sync with interfaces[].*/
-/* Index of each USB interface. Must be consecutive and must sync with interfaces[]. */
+#define DESIGN_DEF                "PS/2 to MSX Keyboard Converter "
+
 /**  Index of each USB interface.
  *
  * Must be consecutive and must sync with interfaces[].
@@ -221,7 +220,7 @@ enum INTF{
 /**  USB Endpoints addresses.
  *
  * Starts with 1, as endpoint 0 is the default.
- @enum ENDPOINT USB Endpoints addresses. Starts with 1, as endpoint 0 is the default.*/
+ * @enum ENDPOINT USB Endpoints addresses. Starts with 1, as endpoint 0 is the default.*/
 enum ENDPOINT{
   EP_CON_DATA_OUT =               1,          //CDC Data OUT of FIRST endpoint
   EP_CON_COMM_OUT,                            //CDC Command of FIRST endpoint: uses this as +0x80
@@ -257,7 +256,7 @@ enum ENDPOINT{
  *
  @{*/ 
 #define HARDWARE_BASE             "Blue Pill (STM32F103C6 C8T6 and up)"
-#define PS2_CLK_INTERRUPT        TIMxCC1_INT
+#define PS2_CLK_INTERRUPT         TIMxCC1_INT
 #define USART_PORT                USART2
 #define EMBEDDED_LED_PORT         GPIOC
 #define EMBEDDED_LED_PIN          GPIO13
@@ -461,10 +460,10 @@ enum ENDPOINT{
 #define PS2_START_SEND_PORT       GPIOA
 #define PS2_START_SEND_PIN        GPIO2
 #define Dbg_Yint_PORT             GPIOB
-#define Dbg_Yint_PIN              GPIO7
-#define TIM2UIF_PORT              GPIOB
+#define Dbg_Yint_PIN              GPIO8
+#define TIM2UIF_PORT              GPIOA
+#define TIM2UIF_PIN               GPIO3
 #define INT_TIM2_PORT             GPIOB
-#define TIM2UIF_PIN               GPIO8
 #define TIM2CC1_PORT              GPIOB
 #define TIM2CC1_PIN               GPIO9
 

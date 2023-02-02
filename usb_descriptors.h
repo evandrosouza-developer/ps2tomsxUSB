@@ -54,22 +54,22 @@
 #include "system.h"
 #include "serial_no.h"
 
-#define BOARD_IDENT "PS/2 to MSX Keyboard Converter " HARDWARE_BASE FIRMWARE_VERSION
-
 
 extern char serial_no[LEN_SERIAL_No + 1];     //Declared as uint8_t on serial_no.c
+
+#define BOARD_IDENT DESIGN_DEF HARDWARE_BASE FIRMWARE_VERSION
 
 #if USE_USB == true 
 static const char *usb_strings[] = {
   "Evandro Rodrigues de Souza Technologies",
   BOARD_IDENT,
   serial_no,
-  "PS/2 to MSX Keyboard Converter Console",               //  Console Port
-  "PS/2 to MSX Keyboard Converter Console ACM Port",      //  Console ACM Port
-  "PS/2 to MSX Keyboard Converter Console DataPort",      //  Console DATA Port
-  "PS/2 to MSX Keyboard Converter USB <-> Serial",        //  Serial Port
-  "PS/2 to MSX Keyboard Converter USB-Serial ACM Port",   //  Serial ACM Port
-  "PS/2 to MSX Keyboard Converter USB-Serial DataPort",   //  Serial DATA Port
+  DESIGN_DEF "Console",                       //  Console Port
+  DESIGN_DEF "Console ACM Port",              //  Console ACM Port
+  DESIGN_DEF "Console DataPort",              //  Console DATA Port
+  DESIGN_DEF "Converter USB <-> Serial",      //  Serial Port
+  DESIGN_DEF "USB-Serial ACM Port",           //  Serial ACM Port
+  DESIGN_DEF "USB-Serial DataPort",           //  Serial DATA Port
 };
 
 #define NUM_STRINGS (sizeof(usb_strings) / sizeof(usb_strings[0]))
