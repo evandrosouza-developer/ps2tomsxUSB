@@ -310,7 +310,7 @@ void tim2_isr(void)
     //corresponding CCxG bit in the TIMx_EGR register.
     
     //Debug & performance measurement
-    gpio_clear(INT_TIM2_PORT, TIM2CC1_PIN); //Signs start of interruption
+    gpio_clear(TIM2UIF_PORT, TIM2CC1_PIN); //Signs start of interruption
 
     // Clear TIM2 Capture compare interrupt pending bit
     //timer_clear_flag(TIM2, TIM_SR_CC1OF |  TIM_SR_CC1IF);
@@ -333,6 +333,6 @@ void tim2_isr(void)
     ps2_clock_update(ps2datapin_logicstate);
 
     //Debug & performance measurement
-    gpio_set(INT_TIM2_PORT, TIM2CC1_PIN); //Signs end of TIM2 interruption. Default condition is "1"
+    gpio_set(TIM2UIF_PORT, TIM2CC1_PIN); //Signs end of TIM2 interruption. Default condition is "1"
   }
 }

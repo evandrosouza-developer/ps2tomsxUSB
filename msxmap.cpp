@@ -503,7 +503,6 @@ void msxmap::convert2msx()
   (linhavarrida < N_DATABASE_REGISTERS) )
   {
     //1 byte key
-    //msx_dispatch(linhavarrida);
     msx_dispatch();
     return;
   }
@@ -523,7 +522,6 @@ void msxmap::convert2msx()
     (scancode[2] == *(base_of_database+linhavarrida*DB_NUM_COLS+1)) )
     {
       //Ok: Matched code
-      //msx_dispatch(linhavarrida);
       msx_dispatch();
       return;
     }
@@ -541,7 +539,6 @@ void msxmap::convert2msx()
     (scancode[3] == *(base_of_database+linhavarrida*DB_NUM_COLS+2)) )
     {
       //Ok: Matched code
-      //msx_dispatch(linhavarrida);
       msx_dispatch();
       return;
     }
@@ -747,7 +744,7 @@ void msxmap::msx_dispatch(void)
     }  // .1 - Mapeamento NumLock (Colunas 6 e 7)
 
     case 2:
-    { // .2 - Mapeamento alternativo (PS/2 Left and Right Shift)  (Colunas 8 e 9)
+    { // .2 - Mapeamento alternativo (PS/2 Left and Right Shift)  (Colunas 6 e 7)
       if (!shiftstate)
       {
         //Shift state is OFF (not pressed), so performs as CASE 0 (see the displacement CASE0_KEY...)
@@ -835,7 +832,7 @@ void msxmap::msx_dispatch(void)
           } //if( (*(base_of_database+linhavarrida*DB_NUM_COLS+CASE2_KEY1) & ~(uint8_t)X_POLARITY_BIT_MASK) == (MSX_SHIFT_PRESS))
         } //if (y_local != y_dummy)
       } //case 2: if (!shiftstate)
-    }  // .2 - Alternate Mapping (PS/2 Left and Right Shift)  (Colunas 8 e 9)
+    }  // .2 - Alternate Mapping (PS/2 Left and Right Shift)  (Colunas 6 e 7)
   } //switch(*(base_of_database+linhavarrida*DB_NUM_COLS+3) & CASE_MASK)
 } //void msxmap::msx_dispatch(void)
 

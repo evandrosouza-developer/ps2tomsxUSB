@@ -71,7 +71,7 @@ Although, this limitation came with a bonus: The need of a cheaper and greater a
 - `stlink + openocd (if you want to debug)`
 - `libopenmcm3`
 
-Obs.: If you plan to keep only one copy of LibopenCM3 in your computer, I really suggest you to create the variable OPENCM3_DIR in our system enviroment.
+Obs.: If you plan to keep only one copy of LibopenCM3 in your computer, I strongly suggest you to create the variable OPENCM3_DIR in our system enviroment.
 
 # Preparations
 
@@ -100,15 +100,15 @@ Create the image file to be sent to the MCU (Micro Controller Unit):
 ```
 make
 ```
-The created image compiled with an Arm GNU Toolchain 12.2.MPACBTI-Bet1 (Build arm-12-mpacbti.16)) 12.2.0 version on an aarch64 debian bullseye linux computer is created with the following characteristics, according to the choosen MCU:
+The created image compiled with an Arm GNU Toolchain 12.2.1 20230214 (Arm GNU Toolchain 12.2.MPACBTI-Rel1 (Build arm-12-mpacbti.34)) on an aarch64 debian bullseye linux computer is created with the following characteristics, according to the choosen MCU:
 ```
 arm-none-eabi-size ps2-msx-kb-convF4.elf
    text	   data	    bss	    dec	    hex	filename
-  35676      60    8120   43856    ab50 ps2-msx-kb-convF4.elf
+  35716	     60	   8120	  43896	   ab78	ps2-msx-kb-convF4.elf
 
 arm-none-eabi-size ps2-msx-kb-convF1.elf
    text	   data	    bss	    dec	    hex	filename
-  26956      24    2176   29156    71e4 ps2-msx-kb-convF1.elf
+  26984	     24	   2176	  29184	   7200	ps2-msx-kb-convF1.elf
 
 ```
 

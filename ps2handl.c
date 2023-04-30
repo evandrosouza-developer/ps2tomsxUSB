@@ -650,7 +650,6 @@ void ps2_clock_send(bool ps2datapin_logicstate)
       conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
       con_send_string((uint8_t*)&mountstring[0]);
       con_send_string((uint8_t*)"\r\n");*/
-      
     }
     else
     {
@@ -1018,11 +1017,11 @@ bool mount_scancode()
           } //if(ps2_byte_received != 0xF0)
           else //if(ps2_byte_received == 0xF0)
           {
-              //3 bytes, but I'm reading the second one (E0 F0)
-              scancode[2] = ps2_byte_received;
-              scancode[0] = 2;
-              mount_scancode_count_status = 2; //points to next case
-              break;
+            //3 bytes, but I'm reading the second one (E0 F0)
+            scancode[2] = ps2_byte_received;
+            scancode[0] = 2;
+            mount_scancode_count_status = 2; //points to next case
+            break;
           } //if(ps2_byte_received == 0xF0)
         }
         if (ps2_keystr_e1)  //Break key (8 bytes)
@@ -1095,11 +1094,11 @@ void general_debug_setup(void)
   gpio_set_mode(BIT0_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, BIT0_PIN);
   gpio_set(BIT0_PORT, BIT0_PIN); //Default condition is "1"
 
-  gpio_set_mode(INT_TIM2_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, TIM2CC1_PIN);
-  gpio_set(INT_TIM2_PORT, TIM2CC1_PIN); //Default condition is "1"
+  gpio_set_mode(TIM2UIF_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, TIM2CC1_PIN);
+  gpio_set(TIM2UIF_PORT, TIM2CC1_PIN); //Default condition is "1"
 
-  gpio_set_mode(INT_TIM2_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, TIM2UIF_PIN); // PC3 (MSX 8255 Pin 17)
-  gpio_set(INT_TIM2_PORT, TIM2UIF_PIN); //Default condition is "1"
+  gpio_set_mode(TIM2UIF_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, TIM2UIF_PIN); // PC3 (MSX 8255 Pin 17)
+  gpio_set(TIM2UIF_PORT, TIM2UIF_PIN); //Default condition is "1"
   
   gpio_set_mode(Dbg_Yint_PORT, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, Dbg_Yint2and3_PIN); // PC2 e 3 (MSX 8255 Pin 17)
   gpio_set(Dbg_Yint_PORT, Dbg_Yint2and3_PIN); //Default condition is "1"

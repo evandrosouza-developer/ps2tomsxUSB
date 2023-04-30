@@ -352,7 +352,7 @@ enum ENDPOINT{
 #define TIM2CC1_PIN               GPIO1       //A1
 #define BIT0_PORT                 GPIOA
 #define BIT0_PIN                  GPIO4       //A4
-#define INT_TIM2_PORT             GPIOA
+#define TIM2UIF_PORT              GPIOA
 #define TIM2UIF_PIN               GPIO5       //A5
 #define Dbg_Yint_PORT             GPIOA
 #define Dbg_Yint0and1_PIN         GPIO6       //A6
