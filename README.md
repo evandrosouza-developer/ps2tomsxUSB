@@ -175,7 +175,7 @@ The software was made considering 25.000Mhz oscillator crystal, to clock the STM
 The connections are:
 
 
-2) PS/2 Keyboard (J3- PS/2 Port) :
+1) PS/2 Keyboard (J3- PS/2 Port) :
 
 - PS/2 power - Pin 1 - Connect to PS/2 mini-din 45322 pin 4;  
 - Clock      - Pin 2 - Connect to PS/2 mini-din 45322 pin 5;  
@@ -183,7 +183,7 @@ The connections are:
 - GNDD       - Pin 4 - Connect to PS/2 mini-din 45322 pin 3.  
 
 
-3) MSX computer:
+2) MSX computer:
 
 Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 to Y3), Port C6 (Caps Lock, pin 11 of DIP package), and for Russian and Japanese Computers (Cyrillic and Kana alphabets), you have to get access to YM2149 IOB7, pin 6 of DIP package.
 
