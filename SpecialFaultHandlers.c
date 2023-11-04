@@ -1,6 +1,6 @@
 /** @addtogroup 08 special_function_handlers Special Function Handlers
  *
- * @file SpecialFaultHandlers.c Intercept and show friendly messages from faulty conditions.</b>
+ * @file SpecialFaultHandlers.c Intercept and show friendly messages from faulty conditions.
  *
  * @brief <b>Intercept and show friendly messages from faulty conditions.</b>
  *

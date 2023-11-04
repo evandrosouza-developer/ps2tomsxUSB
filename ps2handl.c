@@ -266,7 +266,7 @@ bool ps2_keyb_detect(void)
   //Clean RX serial buffer to not false glitch database_setup
   while (con_available_get_char())
     ch = con_get_char();
-  ch&= 0xFF;  //only to avoid unused variable warning.
+  ch &= 0xFF;  //only to avoid unused variable warning.
 
   //Wait for 2.5s to keyboard execute its own power on and BAT (Basic Assurance Test) procedure
   systicks_start_command = systicks;
@@ -300,23 +300,23 @@ bool ps2_keyb_detect(void)
     return ps2_keyb_detected;
   }
   //PS/2 keyboard might already sent its BAT result. Check it:
-  ps2_byte_received = get_ps2_byte(&ps2_recv_buffer[0]);
+  ps2_byte_received = get_ps2_byte(ps2_recv_buffer);
   if(ps2_byte_received != 0)
   {
     if(ps2_byte_received == KB_SUCCESSFULL_BAT)
     {
       //User messages
       con_send_string((uint8_t*)"\r\n..  BAT (Basic Assurance Test) OK in ");
-      conv_uint32_to_dec((prev_systicks - systicks_start_command), &mountstring[0]);
-      con_send_string((uint8_t*)&mountstring[0]);
+      conv_uint32_to_dec((prev_systicks - systicks_start_command), mountstring);
+      con_send_string((uint8_t*)mountstring);
       con_send_string((uint8_t*)" ticks;\r\n");
     }
     else
     {
       //User messages
       con_send_string((uint8_t*)"..  BAT not OK: Received 0x");
-      conv_uint8_to_2a_hex(ps2_byte_received, &mountstring[0]);
-      con_send_string((uint8_t*)&mountstring[0]);
+      conv_uint8_to_2a_hex(ps2_byte_received, mountstring);
+      con_send_string((uint8_t*)mountstring);
       con_send_string((uint8_t*)" instead of 0xAA\r\n");
     }
   }
@@ -338,14 +338,14 @@ bool ps2_keyb_detect(void)
     systicks_start_command = systicks;
     while(!available_ps2_byte() && (systicks - systicks_start_command) < (FREQ_INT_SYSTICK / 10))
     __asm("nop");
-    ps2_byte_received = get_ps2_byte(&ps2_recv_buffer[0]);
+    ps2_byte_received = get_ps2_byte(ps2_recv_buffer);
     if(ps2_byte_received == KB_FIRST_ID)
     {
       //con_send_string((uint8_t*)"Waiting 0x83\r\n");
       systicks_start_command = systicks;
       while(!available_ps2_byte() && (systicks - systicks_start_command) < (FREQ_INT_SYSTICK / 10))
       __asm("nop");
-      ps2_byte_received = get_ps2_byte(&ps2_recv_buffer[0]);
+      ps2_byte_received = get_ps2_byte(ps2_recv_buffer);
       if(ps2_byte_received == KB_SECOND_ID)
       {
         ps2_keyb_detected = true;
@@ -369,8 +369,8 @@ bool ps2_keyb_detect(void)
   {
     //User messages
     /*con_send_string((uint8_t*)"PS/2 ReadID command not OK. Elapsed time was ");
-    conv_uint32_to_8a_hex((systicks - systicks_start_command), &mountstring[0]);
-    con_send_string((uint8_t*)&mountstring[0]);
+    conv_uint32_to_8a_hex((systicks - systicks_start_command), mountstring);
+    con_send_string((uint8_t*)mountstring);
     con_send_string((uint8_t*)"\r\n"); */
     return ps2_keyb_detected;
   }
@@ -443,8 +443,8 @@ void ps2_send_command(uint8_t cmd, uint8_t argm)
   {
     //User messages
     con_send_string((uint8_t*)"0x");
-    conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-    con_send_string((uint8_t*)&mountstring[0]);
+    conv_uint16_to_4a_hex(ps2int_state, mountstring);
+    con_send_string((uint8_t*)mountstring);
     con_send_string((uint8_t*)", instead of 0x0400\r\n");
   }
   command =  cmd;
@@ -462,8 +462,8 @@ void ps2_update_leds(bool num, bool caps, bool scroll)
   {
     //User messages
     con_send_string((uint8_t*)"0x");
-    conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-    con_send_string((uint8_t*)&mountstring[0]);
+    conv_uint16_to_4a_hex(ps2int_state, mountstring);
+    con_send_string((uint8_t*)mountstring);
     con_send_string((uint8_t*)", instead of 0x0400\r\n");
   }
   command = COMM_SET_RESET_LEDS;
@@ -552,27 +552,23 @@ void ps2_clock_update(bool ps2datapin_logicstate)
     gpio_set(PS2_DATA_PORT, PS2_DATA_PIN);
     //User messages (debug)
     con_send_string((uint8_t*)"ps2_clock_sent reseted - Timeout = ");
-    conv_uint32_to_dec((systicks - ps2int_prev_systicks), &mountstring[0]);
-    con_send_string((uint8_t*)&mountstring[0]);
+    conv_uint32_to_dec((systicks - ps2int_prev_systicks), mountstring);
+    con_send_string((uint8_t*)mountstring);
     con_send_string((uint8_t*)", ps2int_TX_bit_idx = ");
-    conv_uint32_to_dec((uint32_t)ps2int_TX_bit_idx, &mountstring[0]);
-    con_send_string((uint8_t*)&mountstring[0]);
+    conv_uint32_to_dec((uint32_t)ps2int_TX_bit_idx, mountstring);
+    con_send_string((uint8_t*)mountstring);
     con_send_string((uint8_t*)", ");
-    conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-    con_send_string((uint8_t*)&mountstring[0]);
+    conv_uint16_to_4a_hex(ps2int_state, mountstring);
+    con_send_string((uint8_t*)mountstring);
     con_send_string((uint8_t*)";\r\n");
     ps2int_state = PS2INT_RECEIVE;
     ps2int_RX_bit_idx = 0;
   }
   
   if( (ps2int_state == PS2INT_SEND_COMMAND) || (ps2int_state == PS2INT_SEND_ARGUMENT) )
-  {
     ps2_clock_send(ps2datapin_logicstate);
-  }
   else
-  {
     ps2_clock_receive(ps2datapin_logicstate);
-  }
 }
 
 
@@ -582,9 +578,7 @@ void ps2_clock_send(bool ps2datapin_logicstate)
   ps2int_prev_systicks = systicks;
   //Time check - The same for all bits
   if (time_between_ps2clk > 10000) // time >10ms
-  {
     con_send_string((uint8_t*)"Time > 10ms on TX");
-  }
   //|variável| = `if`(condição) ? <valor1 se true> : <valor2 se false>;:
   //Only two TX states of send: ps2_send_command & send_argument
   uint8_t data_byte = (ps2int_state == PS2INT_SEND_COMMAND) ? command : argument;
@@ -595,8 +589,8 @@ void ps2_clock_send(bool ps2datapin_logicstate)
     ps2int_TX_bit_idx++;
       //User messages (debug)
       /*con_send_string((uint8_t*)"sent bit #");
-      conv_uint32_to_dec((uint32_t)ps2int_TX_bit_idx-1, &mountstring[0]);
-      con_send_string((uint8_t*)&mountstring[0]);
+      conv_uint32_to_dec((uint32_t)ps2int_TX_bit_idx-1, mountstring);
+      con_send_string((uint8_t*)mountstring);
       con_send_string((uint8_t*)": ");*/
     if(bit)
     {
@@ -644,11 +638,11 @@ void ps2_clock_send(bool ps2datapin_logicstate)
       //  ACK bit ok
       //User messages (debug)
       /*con_send_string((uint8_t*)"TX Data sent OK: 0x");
-      conv_uint8_to_2a_hex(data_byte, &mountstring[0]);
-      con_send_string((uint8_t*)&mountstring[0]);
+      conv_uint8_to_2a_hex(data_byte, mountstring);
+      con_send_string((uint8_t*)mountstring);
       con_send_string((uint8_t*)", 0x");
-      conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-      con_send_string((uint8_t*)&mountstring[0]);
+      conv_uint16_to_4a_hex(ps2int_state, mountstring);
+      con_send_string((uint8_t*)mountstring);
       con_send_string((uint8_t*)"\r\n");*/
     }
     else
@@ -657,8 +651,8 @@ void ps2_clock_send(bool ps2datapin_logicstate)
       gpio_set(PS2_DATA_PORT, PS2_DATA_PIN);  //To warranty that is not caused by let this pin LOW
       //User messages (debug)
       con_send_string((uint8_t*)"Trying to send 0x");
-      conv_uint8_to_2a_hex(data_byte, &mountstring[0]);
-      con_send_string((uint8_t*)&mountstring[0]);
+      conv_uint8_to_2a_hex(data_byte, mountstring);
+      con_send_string((uint8_t*)mountstring);
       con_send_string((uint8_t*)". ACK bit not received from keyboard\r\n");
       ps2int_state = PS2INT_RECEIVE; //force to receive_status in absence of something better
       ps2int_RX_bit_idx = 0;
@@ -675,8 +669,8 @@ void ps2_clock_send(bool ps2datapin_logicstate)
         ps2int_RX_bit_idx =  0;
         //User messages (debug)
         /*con_send_string((uint8_t*)"TX: new 0x");
-        conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-        con_send_string((uint8_t*)&mountstring[0]);
+        conv_uint16_to_4a_hex(ps2int_state, mountstring);
+        con_send_string((uint8_t*)mountstring);
         con_send_string((uint8_t*)"\r\n");*/
       }
       else
@@ -691,8 +685,8 @@ void ps2_clock_send(bool ps2datapin_logicstate)
       ps2int_RX_bit_idx =  0;
       //User messages (debug)
       /*con_send_string((uint8_t*)"TX: new 0x");
-      conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-      con_send_string((uint8_t*)&mountstring[0]);
+      conv_uint16_to_4a_hex(ps2int_state, mountstring);
+      con_send_string((uint8_t*)mountstring);
       con_send_string((uint8_t*)"\r\n");*/
     }
     else
@@ -702,8 +696,8 @@ void ps2_clock_send(bool ps2datapin_logicstate)
       ps2int_RX_bit_idx =  0;
       //User messages (debug)
       /*con_send_string((uint8_t*)"TX: new 0x");
-      conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-      con_send_string((uint8_t*)&mountstring[0]);
+      conv_uint16_to_4a_hex(ps2int_state, mountstring);
+      con_send_string((uint8_t*)mountstring);
       con_send_string((uint8_t*)"\r\n");*/
     }
   }
@@ -729,8 +723,8 @@ void ps2_clock_receive(bool ps2datapin_logicstate)
     gpio_set(PS2_DATA_PORT, PS2_DATA_PIN);
     //User messages (debug)
     //con_send_string((uint8_t*)"RX: ps2int_state = 0x");
-    //conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-    //con_send_string((uint8_t*)&mountstring[0]);
+    //conv_uint16_to_4a_hex(ps2int_state, mountstring);
+    //con_send_string((uint8_t*)mountstring);
     //con_send_string((uint8_t*)"\r\n");
     data_word = 0;
     stop_bit = 0xff;
@@ -761,8 +755,8 @@ void ps2_clock_receive(bool ps2datapin_logicstate)
     bool parity_ok = __builtin_parity((data_word<<1)|parity_bit);
     //User messages (debug)
     /*con_send_string((uint8_t*)"RX Data: 0x");
-    conv_uint8_to_2a_hex(data_word, &mountstring[0]);
-    con_send_string((uint8_t*)&mountstring[0]);
+    conv_uint8_to_2a_hex(data_word, mountstring);
+    con_send_string((uint8_t*)mountstring);
     if(parity_ok)
       con_send_string((uint8_t*)", pbit OK,");
     else
@@ -772,8 +766,8 @@ void ps2_clock_receive(bool ps2datapin_logicstate)
     else
       con_send_string((uint8_t*)" sbit issue,");
     con_send_string((uint8_t*)" 0x");
-    conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-    con_send_string((uint8_t*)&mountstring[0]);
+    conv_uint16_to_4a_hex(ps2int_state, mountstring);
+    con_send_string((uint8_t*)mountstring);
     con_send_string((uint8_t*)"\r\n");*/
 
     if(parity_ok && (stop_bit == 1) ) //start bit condition was already tested above
@@ -833,8 +827,8 @@ void ps2_clock_receive(bool ps2datapin_logicstate)
           fail_count++;
           //User messages (debug)
           con_send_string((uint8_t*)"Got unexpected command response: 0x");
-          conv_uint8_to_2a_hex(data_word, &mountstring[0]);
-          con_send_string((uint8_t*)&mountstring[0]);
+          conv_uint8_to_2a_hex(data_word, mountstring);
+          con_send_string((uint8_t*)mountstring);
           con_send_string((uint8_t*)"\r\n");
         } //else if(data_word==KBCOMM_RESEND) //0xFE is Resend
       }
@@ -861,8 +855,8 @@ void ps2_clock_receive(bool ps2datapin_logicstate)
           command_running = false;
           //User messages (debug)
           con_send_string((uint8_t*)"Got unexpected command response: 0x");
-          conv_uint8_to_2a_hex(data_word, &mountstring[0]);
-          con_send_string((uint8_t*)&mountstring[0]);
+          conv_uint8_to_2a_hex(data_word, mountstring);
+          con_send_string((uint8_t*)mountstring);
           con_send_string((uint8_t*)"\r\n");
         }
       }   // ps2int_status receive procesing block (end)
@@ -886,11 +880,11 @@ void ps2_clock_receive(bool ps2datapin_logicstate)
           command_running = false;
           //User messages (debug)
           con_send_string((uint8_t*)"In 0x");
-          conv_uint16_to_4a_hex(ps2int_state, &mountstring[0]);
-          con_send_string((uint8_t*)&mountstring[0]);
+          conv_uint16_to_4a_hex(ps2int_state, mountstring);
+          con_send_string((uint8_t*)mountstring);
           con_send_string((uint8_t*)", received 0x");
-          conv_uint8_to_2a_hex(data_word, &mountstring[0]);
-          con_send_string((uint8_t*)&mountstring[0]);
+          conv_uint8_to_2a_hex(data_word, mountstring);
+          con_send_string((uint8_t*)mountstring);
           con_send_string((uint8_t*)" instead of COMM_ECHO (0xEE)\r\n");
         }  //if(data_word == COMM_ECHO)
       } //else if (ps2int_state == PS2INT_WAIT_FOR_ECHO)
@@ -937,22 +931,22 @@ bool mount_scancode()
     update_ps2_leds = true;
   if( (kana_state = gpio_get(KANA_PORT, KANA_PIN)) != kana_former )
     update_ps2_leds = true;
-  // static uint16_t prev_state_index=0;
+
   if (!mount_scancode_OK)
   { 
     while(available_ps2_byte() && !mount_scancode_OK)
     {
-      ps2_byte_received = get_ps2_byte(&ps2_recv_buffer[0]);
+      ps2_byte_received = get_ps2_byte(ps2_recv_buffer);
       //User messages (debug)
       /*con_send_string((uint8_t*)"Mount_scancode RX Ch=");
-      conv_uint8_to_2a_hex(ps2_byte_received, &mountstring[0]);
-      con_send_string((uint8_t*)&mountstring[0]);
+      conv_uint8_to_2a_hex(ps2_byte_received, mountstring);
+      con_send_string((uint8_t*)mountstring);
       con_send_string((uint8_t*)"\r\n"); */
       switch (mount_scancode_count_status)
       {
-      case 0: //Está lendo o primeiro byte do ps2_byte_received
+      case 0: //It's reading the first byte of ps2_byte_received
       {
-        if(ps2_byte_received < 0xE0) //Se até 0xDF cai aqui
+        if(ps2_byte_received < 0xE0) //If until 0xDF, included, runs here
         {
           //Concluded. 1 byte only scan code.
           scancode[1] = ps2_byte_received;
@@ -1078,7 +1072,7 @@ bool mount_scancode()
       default:
         break;
       } //switch (mount_scancode_count_status)
-    } //while((ps2_byte_received=get_ps2_byte(&ps2_recv_buffer[0]))!=0 && !mount_scancode_OK)
+    } //while((ps2_byte_received=get_ps2_byte(ps2_recv_buffer))!=0 && !mount_scancode_OK)
     return false;
   }//if (!mount_scancode_OK)
   return false;

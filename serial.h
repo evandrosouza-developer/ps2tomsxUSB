@@ -260,6 +260,7 @@ void conv_uint8_to_2a_hex(uint8_t value, uint8_t *outstring);
  *
  * @param idx_u16 16 bit index to binary number to be converted
  * @param base_u32 address to where put the stringz result
+ * @param size size of the 16 bit addressed buffer (Connected to type of variable, not always the size in bytes)
  */
 void check_idx_u16(uint16_t idx_u16, uintptr_t base_u32, uint16_t size);
 

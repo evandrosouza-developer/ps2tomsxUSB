@@ -77,8 +77,8 @@ extern uint32_t systicks;                     //Declared on sys_timer.cpp
 extern bool ps2numlockstate;                  //Declared on ps2handl.c
 bool do_next_keep_alive;
 volatile bool shiftstate;
-volatile uint16_t linhavarrida;
 extern volatile bool update_ps2_leds;         //Declared on ps2handl.c
+volatile uint16_t linhavarrida;
 //Place to store previous time for each Y last scan
 volatile uint32_t previous_y_systick[ 16 ] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 

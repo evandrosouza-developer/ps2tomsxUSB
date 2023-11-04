@@ -320,8 +320,8 @@ int main(void)
         con_send_string(mountstring);
         con_send_string((uint8_t*)"\r\n"); */
         //Toggle led each PS/2 keyboard change (both new presses and releases).
-        gpio_toggle(EMBEDDED_LED_PORT, EMBEDDED_LED_PIN); //Toggle led to sinalize a scan code is beeing send to convert2msx
-        // Do the MSX search and conversion
+        gpio_toggle(EMBEDDED_LED_PORT, EMBEDDED_LED_PIN); //Toggle led to indicate a scan code is beeing sent to convert2msx
+        // Do the Database search and do the correct conversion to MSX
         msxmap objeto;
         objeto.convert2msx();
       } //if (scancode != formerscancode)

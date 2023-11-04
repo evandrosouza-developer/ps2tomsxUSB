@@ -21,7 +21,7 @@ serial.c                Manages UART RX and TX buffers, interrupts and DMA, mana
 serial.h                Header file of serial.c.
 cdcacm.c                Setup and run specific routines to interface to USB.
 cdcacm.h                Header file of cdcacm.c.
-usb_descriptors.h       USB descriptors. It is a  header file for cdcacm.c.
+usb_descriptors.h       USB descriptors. It is a header file for cdcacm.c.
 newlib_warning_fix.c    Fix warnings of "not implemented and will always fail" on reentrant calls of NEWLIB from August 8th, 2022, on version 11.3 Rel1.
 newlib_warning_fix.h    Header file of newlib_warning_fix.c
 Makefile                Cores M3 and M4 common Makefile.

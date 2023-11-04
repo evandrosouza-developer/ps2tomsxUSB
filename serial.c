@@ -118,14 +118,14 @@ void serial_setup(void)
   ring_init(&con_rx_ring, con_rx_ring_buffer, CON_RX_RING_BUFFER_SIZE);
 #endif  //#if USE_USB == true
 
+//This comment is valid only to STM32F4:
 //getting number of data from STREAM5 does not work, as it seems to be initialized as 0xFFFF,
-//disconsidering what you put. This case (STM32F401 & USART1 RX) will be supported by DMA_STREAM2
+//disregarding that you put. This case (STM32F401 & USART1 RX) will be supported by DMA_STREAM2
 
   ring_init(&dma_rx_ring, buf_dma_rx, RX_DMA_SIZE);
 
   // Enable clocks for USART_PORT and DMA.
   rcc_periph_clock_enable(RCC_USART);
-  //Enable clocks now for DMA
   rcc_periph_clock_enable(RCC_DMA);
 
   // Setup GPIO pin GPIO_USART_RX_TX on GPIO port A for transmit.
@@ -155,7 +155,7 @@ void serial_setup(void)
   usart_set_mode(USART_PORT, USART_MODE_TX_RX);
 
   // Setup USART TX DMA
-  dma_ch_reset(USART_DMA_BUS, USART_DMA_TX_CH);
+  DMA_CH_RESET(USART_DMA_BUS, USART_DMA_TX_CH);
   dma_set_peripheral_address(USART_DMA_BUS, USART_DMA_TX_CH, (uint32_t)&USART_DR(USART_PORT));
   //Now I don't have buf_dma_tx anymore. I use the availability of uart_tx_ring
   //dma_set_memory_address(USART_DMA_BUS, USART_DMA_TX_CH, (uint32_t)buf_dma_tx);
@@ -199,7 +199,7 @@ void serial_setup(void)
 //disconsidering what you put. This case (STM32F401 & USART1 RX) will be supported by DMA_STREAM2
 
   // Setup USART RX DMA
-  dma_ch_reset(USART_DMA_BUS, USART_DMA_RX_CH);
+  DMA_CH_RESET(USART_DMA_BUS, USART_DMA_RX_CH);
   dma_set_peripheral_address(USART_DMA_BUS, USART_DMA_RX_CH, (uint32_t)&USART_DR(USART_PORT));
   dma_set_memory_address(USART_DMA_BUS, USART_DMA_RX_CH, (uint32_t)buf_dma_rx);
   dma_set_number_of_data(USART_DMA_BUS, USART_DMA_RX_CH, RX_DMA_SIZE);
@@ -241,7 +241,7 @@ void serial_setup(void)
   usart_enable_idle_interrupt(USART_PORT); usart_disable_rx_interrupt(USART_PORT);
   usart_enable_rx_dma(USART_PORT);
   // Enable the DMA engine of USART RX. RX is never shutdown.
-  dma_enable_ch(USART_DMA_BUS, USART_DMA_RX_CH);
+  DMA_ENABLE_CH(USART_DMA_BUS, USART_DMA_RX_CH);
 
   // Enable the USART RX.
   nvic_set_priority(NVIC_USART_IRQ, IRQ_PRI_USART);
@@ -308,7 +308,7 @@ void usart_update_comm_param(struct usb_cdc_line_coding *usart_comm_param)
 
 void serial_rx_restart(void)
 {
-  dma_disable_ch(USART_DMA_BUS, USART_DMA_RX_CH);
+  DMA_DISABLE_CH(USART_DMA_BUS, USART_DMA_RX_CH);
   //wait until it is really disabled
   while(DMA_CR(USART_DMA_BUS, USART_DMA_RX_CH) & DMA_CR_EN) __asm("nop");
   //Clear USART_SR_IDLE, to avoid IDLE new interrupts without new incoming chars.
@@ -322,7 +322,7 @@ void serial_rx_restart(void)
   con_rx_ring.put_ptr = 0;
   con_rx_ring.get_ptr = 0;
 #endif  //#if USE_USB == true
-  dma_enable_ch(USART_DMA_BUS, USART_DMA_RX_CH);
+  DMA_ENABLE_CH(USART_DMA_BUS, USART_DMA_RX_CH);
 }
 
 
@@ -338,7 +338,7 @@ void do_dma_usart_tx_ring(uint16_t number_of_data)
     dma_set_memory_address(USART_DMA_BUS, USART_DMA_TX_CH, (uint32_t)&uart_tx_ring.data[uart_tx_ring.get_ptr]);
     dma_set_number_of_data(USART_DMA_BUS, USART_DMA_TX_CH, number_of_data);
     last_dma_tx_set_number_of_data = number_of_data;
-    dma_enable_ch(USART_DMA_BUS, USART_DMA_TX_CH);
+    DMA_ENABLE_CH(USART_DMA_BUS, USART_DMA_TX_CH);
     usart_enable_tx_dma(USART_PORT);
   }
 }
@@ -800,6 +800,10 @@ void conv_uint8_to_2a_hex(uint8_t value, uint8_t *outstring)
 
 
 //Check if uint16_t index is inside bounds
+// idx_u16 16 bit index to binary number to be converted
+// base_u32 address to where put the stringz result
+// size size of the 16 bit addressed buffer (Connected to type of variable, not always the size in bytes)
+
 void check_idx_u16(uint16_t idx_u16, uintptr_t base_u32, uint16_t size)
 {
   if(idx_u16 >= size)
@@ -957,7 +961,7 @@ ISR_DMA_CH_USART_TX
   
   //Stop DMA
   usart_disable_tx_dma(USART_PORT);
-  dma_disable_ch(USART_DMA_BUS, USART_DMA_TX_CH);//DMA disable transmitter
+  DMA_DISABLE_CH(USART_DMA_BUS, USART_DMA_TX_CH);//DMA disable transmitter
   dma_clear_interrupt_flags(USART_DMA_BUS, USART_DMA_TX_CH, DMA_CGIF);
 
   //Update uart_tx_ring.get_ptr with last_dma_tx_set_number_of_data.
@@ -986,6 +990,6 @@ ISR_DMA_CH_USART_TX
   dma_set_memory_address(USART_DMA_BUS, USART_DMA_TX_CH, (uintptr_t)&uart_tx_ring.data[uart_tx_ring.get_ptr]);
   dma_set_number_of_data(USART_DMA_BUS, USART_DMA_TX_CH, to_put_in_dma_tx);
   last_dma_tx_set_number_of_data = to_put_in_dma_tx;
-  dma_enable_ch(USART_DMA_BUS, USART_DMA_TX_CH);
+  DMA_ENABLE_CH(USART_DMA_BUS, USART_DMA_TX_CH);
   usart_enable_tx_dma(USART_PORT);
 }

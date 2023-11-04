@@ -564,6 +564,8 @@ uint32_t flash_program_data(uint8_t *flash_buffer_ram)
     } //for(iter = 0; iter < (DB_NUM_COLS / 2); iter ++)
   } //if (base_of_database_num != INITIAL_DATABASE)
   con_send_string((uint8_t*)"\r\nSuccessfully written database at 0x");
+  conv_uint32_to_8a_hex((uintptr_t)base_of_database_num, str_mount);
+  con_send_string((uint8_t*)str_mount);
   con_send_string((uint8_t*)".\r\n\nNow, please TURN OFF to plug the PS/2 keyboard!");
   flash_lock();
   flash_locked = true;

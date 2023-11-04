@@ -617,9 +617,9 @@ enum ENDPOINT{
 #define DMA_CR                    DMA_CCR
 #define DMA_CR_EN                 DMA_CCR_EN
 #define DMA_CGIF                  DMA_IFCR_CGIF1
-#define dma_ch_reset              dma_channel_reset
-#define dma_enable_ch             dma_enable_channel
-#define dma_disable_ch            dma_disable_channel
+#define DMA_CH_RESET              dma_channel_reset
+#define DMA_ENABLE_CH             dma_enable_channel
+#define DMA_DISABLE_CH            dma_disable_channel
 #endif  //#if (MCU == STM32F103)
 
 #if MCU == STM32F401
@@ -679,9 +679,9 @@ enum ENDPOINT{
 #define DMA_CR                    DMA_SCR
 #define DMA_CR_EN                 DMA_SxCR_EN
 #define DMA_CGIF                  (DMA_TCIF | DMA_HTIF | DMA_TEIF | DMA_DMEIF | DMA_FEIF)
-#define dma_ch_reset              dma_stream_reset
-#define dma_enable_ch             dma_enable_stream
-#define dma_disable_ch            dma_disable_stream
+#define DMA_CH_RESET              dma_stream_reset
+#define DMA_ENABLE_CH             dma_enable_stream
+#define DMA_DISABLE_CH            dma_disable_stream
 #endif  //#if MCU == STM32F401
 
 
