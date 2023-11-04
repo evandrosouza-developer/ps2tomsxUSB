@@ -177,52 +177,35 @@ The connections are:
 
 2) PS/2 Keyboard (J3- PS/2 Port) :
 
-- PS/2 power - Pin 1 - Connect to PS/2 mini-din 45322 pin 4;
-
-- Clock      - Pin 2 - Connect to PS/2 mini-din 45322 pin 5;
-
-- Data       - Pin 3 - Connect to PS/2 mini-din 45322 pin 1;
-
-- GNDD       - Pin 4 - Connect to PS/2 mini-din 45322 pin 3.
+- PS/2 power - Pin 1 - Connect to PS/2 mini-din 45322 pin 4;  
+- Clock      - Pin 2 - Connect to PS/2 mini-din 45322 pin 5;  
+- Data       - Pin 3 - Connect to PS/2 mini-din 45322 pin 1;  
+- GNDD       - Pin 4 - Connect to PS/2 mini-din 45322 pin 3.  
 
 
 3) MSX computer:
 
 Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 to Y3), Port C6 (Caps Lock, pin 11 of DIP package), and for Russian and Japanese Computers (Cyrillic and Kana alphabets), you have to get access to YM2149 IOB7, pin 6 of DIP package.
 
-- Y3 - Connect to MSX PPI 8255 Signal PC3 (HB-8000 CI-15 Pin 17 / XP-800 CI-4 Pin 17);
-
-- Y2 - Connect to MSX PPI 8255 Signal PC2 (HB-8000 CI-15 Pin 16 / XP-800 CI-4 Pin 16);
-
-- Y1 - Connect to MSX PPI 8255 Signal PC1 (HB-8000 CI-15 Pin 15 / XP-800 CI-4 Pin 15);
-
-- Y0 - Connect to MSX PPI 8255 Signal PC0 (HB-8000 CI-15 Pin 14 / XP-800 CI-4 Pin 14);
-
-- X7 - Connect to MSX PPI 8255 Signal PB7 (HB-8000 CI-15 Pin 25 / XP-800 CI-4 Pin 25);
-
-- X6 - Connect to MSX PPI 8255 Signal PB6 (HB-8000 CI-15 Pin 24 / XP-800 CI-4 Pin 24);
-
-- X5 - Connect to MSX PPI 8255 Signal PB5 (HB-8000 CI-15 Pin 23 / XP-800 CI-4 Pin 23);
-
-- X4 - Connect to MSX PPI 8255 Signal PB4 (HB-8000 CI-15 Pin 22 / XP-800 CI-4 Pin 22);
-
-- X3 - Connect to MSX PPI 8255 Signal PB3 (HB-8000 CI-15 Pin 21 / XP-800 CI-4 Pin 21);
-
-- X2 - Connect to MSX PPI 8255 Signal PB2 (HB-8000 CI-15 Pin 20 / XP-800 CI-4 Pin 20);
-
-- X1 - Connect to MSX PPI 8255 Signal PB1 (HB-8000 CI-15 Pin 19 / XP-800 CI-4 Pin 19);
-
-- X0 - Connect to MSX PPI 8255 Signal PB0 (HB-8000 CI-15 Pin 18 / XP-800 CI-4 Pin 18);
-
-- Caps LED - Connect to MSX PPI 8255 Signal PC6 (HB-8000 CI-15 Pin 11 / XP-800 CI-4 Pin 11);
-
-- Kana LED - Connect to MSX YM2149 IOB7, pin 6 of DIP package. If the MSX doesn't have this, you can leave it open, as it already has an internal pull-up connection.
-
-
-3) USB Type C: Needed only to update internal PS/2 to MSX key mapping Database. To create this Intel Hex file, better to use the Macro based Excel file, so you have to trust and enable macro excecution in excel app. The USB cable is the same as you use with yor mobile phone (USB Type-A Male x USB Type C Male).
-
-4) Serial console: Same observations of USB are applicable here, with exception of the cable itself. Here the connection has to be done with TX of your host system connected with RX of the PS/2 to MSX Keyboard Converter (device), and the device's TX has to be connected to host's RX.
-
+- Y3 - Connect to MSX PPI 8255 Signal PC3 (HB-8000 CI-15 Pin 17 / XP-800 CI-4 Pin 17);  
+- Y2 - Connect to MSX PPI 8255 Signal PC2 (HB-8000 CI-15 Pin 16 / XP-800 CI-4 Pin 16);  
+- Y1 - Connect to MSX PPI 8255 Signal PC1 (HB-8000 CI-15 Pin 15 / XP-800 CI-4 Pin 15);  
+- Y0 - Connect to MSX PPI 8255 Signal PC0 (HB-8000 CI-15 Pin 14 / XP-800 CI-4 Pin 14);  
+- X7 - Connect to MSX PPI 8255 Signal PB7 (HB-8000 CI-15 Pin 25 / XP-800 CI-4 Pin 25);  
+- X6 - Connect to MSX PPI 8255 Signal PB6 (HB-8000 CI-15 Pin 24 / XP-800 CI-4 Pin 24);  
+- X5 - Connect to MSX PPI 8255 Signal PB5 (HB-8000 CI-15 Pin 23 / XP-800 CI-4 Pin 23);  
+- X4 - Connect to MSX PPI 8255 Signal PB4 (HB-8000 CI-15 Pin 22 / XP-800 CI-4 Pin 22);  
+- X3 - Connect to MSX PPI 8255 Signal PB3 (HB-8000 CI-15 Pin 21 / XP-800 CI-4 Pin 21);  
+- X2 - Connect to MSX PPI 8255 Signal PB2 (HB-8000 CI-15 Pin 20 / XP-800 CI-4 Pin 20);  
+- X1 - Connect to MSX PPI 8255 Signal PB1 (HB-8000 CI-15 Pin 19 / XP-800 CI-4 Pin 19);  
+- X0 - Connect to MSX PPI 8255 Signal PB0 (HB-8000 CI-15 Pin 18 / XP-800 CI-4 Pin 18);  
+- Caps LED - Connect to MSX PPI 8255 Signal PC6 (HB-8000 CI-15 Pin 11 / XP-800 CI-4 Pin 11);  
+- Kana LED - Connect to MSX YM2149 IOB7, pin 6 of DIP package. If the MSX doesn't have this, you can leave it open, as it already has an internal pull-up connection.  
+  
+3) USB Type C: Needed only to update internal PS/2 to MSX key mapping Database. To create this Intel Hex file, better to use the Macro based Excel file, so you have to trust and enable macro excecution in excel app. The USB cable is the same as you use with yor mobile phone (USB Type-A Male x USB Type C Male).  
+  
+4) Serial console: Same observations of USB are applicable here, with exception of the cable itself. Here the connection has to be done with TX of your host system connected with RX of the PS/2 to MSX Keyboard Converter (device), and the device's TX has to be connected to host's RX.  
+  
   Config: 115200, 8, n, 1 (115200 bps, 8 bits, no parity, 1 stop bit);
 
   Tx: A9  
