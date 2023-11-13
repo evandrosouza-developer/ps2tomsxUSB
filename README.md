@@ -26,17 +26,23 @@ This firmware was made to support both Blue Pill and Black Pill and it is part o
 ```
 1)The PS/2 to MSX Keyboard Converter itself, which contains:
 1.1) The firmware with source files;
-1.2) Schematics and PCB design:
-1.2.1) Electronics part Schematics with Kicad files;
-1.2.2) Single sided PCB layout with Kicad files and complete set of Gerber files;
+1.2) Doxygen full firmware documentation;
+1.3) Schematics and PCB design:
+1.3.1) Electronics part Schematics with Kicad files;
+1.3.2) Single sided PCB layout with Kicad files and complete set of Gerber files;
+1.3.3) The performance tests of this one are inside the PS/2 to MSX Converter Tester folder.
 
 2)The PS/2 to MSX Converter Tester, which contains:
 2.1) The firmware with source files;
-2.2) Schematics design with Kicad files;
+2.2) Doxygen full firmware documentation;
+2.3) Schematics design with Kicad files;
+2.4) The performance tests of the PS/2 to MSX Keyboard Converter are located here.
 
-3) Tool to create/modify the Database (Translation tables to map from PS/2 Scan Codes to MSX Matrix Codes) in excel, but it has compatible macros to be executed by Libre Office, Open Office, Star Office and so on.
+3) Tool to create/modify the Database (Translation tables to map from PS/2 Scan Codes to MSX Matrix Codes)
+in excel, but it has compatible macros to be executed by Libre Office, Open Office and so on.
 
-4) Tini TTY I/O - tio (Linux app with source files) to communicate with console and easily allowing the user to use it with different keyboard layouts and languages.
+4) Tini TTY I/O - tio (Linux app with source files) to communicate with console and easily allowing the
+user to use it with different keyboard layouts and languages.
 ```
 In case of STM32F103C8T6 (Flash 64K RAM 20K) Blue Pill, you have to aplly STM32F103C6T6 (Flash 32K RAM 10K) without change anything else.
 
@@ -55,7 +61,7 @@ The original code was originally developed based on:
 # Why not STM32F103C8T6 Blue Pill?
 
 Because Blue Pill has no 5V tolerant pins available to connect PS/2 + MSX + Serial + USB, unlike Black Pill. Even serial (UART) was feasibled using a 3.3V only port.  
-Although, this limitation came with a bonus: The need of a cheaper and greater avaiability 32KB flash MCU: STM32F103C6T6  
+Although, this limitation came with a bonus: The need of a cheaper and greater availability 32KB flash MCU: STM32F103C6T6  
 
 
 # Dependencies
@@ -68,7 +74,7 @@ If you plan to debug:
 - `arm-none-eabi-gdb`
 - `stlink + openocd`
 
-Obs.: If you plan to keep only one copy of LibopenCM3 in your computer, I strongly suggest you to create the variable OPENCM3_DIR in our system enviroment.
+Obs.: If you plan to keep only one copy of LibopenCM3 in your computer, I strongly suggest you to setup the variable OPENCM3_DIR in our system enviroment.
 
 # Preparations
 
@@ -144,11 +150,10 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 - X1 - Connect to MSX PPI 8255 Signal PB1 (HB-8000 CI-15 Pin 19 / XP-800 CI-4 Pin 19);  
 - X0 - Connect to MSX PPI 8255 Signal PB0 (HB-8000 CI-15 Pin 18 / XP-800 CI-4 Pin 18);  
 - Caps LED - Connect to MSX PPI 8255 Signal PC6 (HB-8000 CI-15 Pin 11 / XP-800 CI-4 Pin 11);  
-- Kana LED - Connect to MSX YM2149 IOB7, pin 6 of DIP package. If the MSX doesn't have this, you can leave it open, as it already has an internal pull-up connection.
-
+- Kana LED - Connect to MSX YM2149 or AY3-8910 IOB7, pin 6 of DIP package. If the MSX doesn't have this indicator LED, you can leave it open, as it already has an internal pull-up connection. In brazilian, argentinian and most european MSX, for example, this is a non-connect pin.   
 
 3) Serial console:
- It is the only option for console available if you are using Blue Pill. Vide ## Why not STM32F103C8T6 Blue Pill?
+ It is the only option for console available if you are using Blue Pill. See ## Why not STM32F103C8T6 Blue Pill?
 
  The connection is needed only to update internal PS/2 to MSX key mapping Database. To create this Intel Hex file, better to use the Macro based Excel file, so you have to trust and enable macro excecution in excel app. 
 
@@ -200,7 +205,7 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 - X1 - Connect to MSX PPI 8255 Signal PB1 (HB-8000 CI-15 Pin 19 / XP-800 CI-4 Pin 19);  
 - X0 - Connect to MSX PPI 8255 Signal PB0 (HB-8000 CI-15 Pin 18 / XP-800 CI-4 Pin 18);  
 - Caps LED - Connect to MSX PPI 8255 Signal PC6 (HB-8000 CI-15 Pin 11 / XP-800 CI-4 Pin 11);  
-- Kana LED - Connect to MSX YM2149 IOB7, pin 6 of DIP package. If the MSX doesn't have this, you can leave it open, as it already has an internal pull-up connection.  
+- Kana LED - Connect to MSX YM2149 or AY3-8910 IOB7, pin 6 of DIP package. If the MSX doesn't have this indicator LED, you can leave it open, as it already has an internal pull-up connection. In brazilian, argentinian and most european MSX, for example, this is a non-connect pin.   
   
 3) USB Type C: Needed only to update internal PS/2 to MSX key mapping Database. To create this Intel Hex file, better to use the Macro based Excel file, so you have to trust and enable macro excecution in excel app. The USB cable is the same as you use with yor mobile phone (USB Type-A Male x USB Type C Male).  
   
@@ -239,6 +244,8 @@ This design was developed to connect an ABNT-2 brazilian PC keyboard to the braz
 	  |  (bit 4): default value of ps2numlockstate at power up;  
 	  |  (bits 3-0): y_dummy (non valid colunm);
 	- Bytes 4-7: Reeserved - Keep it as 0xFFFFFFFF;
+        When this copy of the Database is let unavailable, the first line becomes ("0x00", "0x00", "0x00", "0x00", "0x01", "0x02", 
+	"0x04", "0x08"), meaning to seek the next one.
 
 	On the line 319 (the last one) there are information related to this Database integrity:  
 	- Bytes 0-5: Reeserved - Keep each byte as 0xFF;  
@@ -263,8 +270,8 @@ This design was developed to connect an ABNT-2 brazilian PC keyboard to the braz
 	This table has 3 modifyers: Up two MSX keys are considered to each mapping behavior modifying:
 	- 5th and 6th columns have the mapping 0 - "Default mapping";  
 	- 7th and 8th columns share mappings:  1 and 2:  
-	|                                     1 - "NumLock Status+Shift changes";  
-	|                                     2 - "PS/2 Shift", where I need to release the sinalized Shift in PS/2 to the MSX and put the code key, and so, release them, reapplying the Shift key, deppending on the initial state;  
+	  |                                    1 - "NumLock Status+Shift changes";  
+	  |                                    2 - "PS/2 Shift", where I need to release the sinalized Shift in PS/2 to the MSX and put the code key, and so, release them, reapplying the Shift key, deppending on the initial state;  
 
 	Each column has a MSX encoded key, with the following structure:
 	- (bit 7:4) MSX Y PPI 8255 PC3:0 is sent to a BCD decoder with OC outputs, for example:  
