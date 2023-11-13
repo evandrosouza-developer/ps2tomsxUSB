@@ -12,9 +12,16 @@ The MSX Keyboard enviroment components (PS/2 to MSX Keyboard Converter, MSX Keyb
 
 This interface has the function of connect a PS/2 keyboard (or a USB one in compatibility mode) as source to TTL zero (low state) active matrix based computers, like MSX and ZX-Spectrum as destination. It is meant to connect a keyboard, which only provides a PS/2 connector, to a MSX (or any one that have a up to 15 active columns and reads zeroes througth 8 bits - up to 15 x 8 matrix) computer.  
 
-The differencial of this design is to allow user to customize and update the database layout of this PS/2 Keyboard, as like as the MSX one, through an USB (or async serial) interface and a tty terminal on host side.  
+The differencial of this design is to allow user to customize and do a hot update of the database layout of this PS/2 Keyboard, as like as the MSX one, through an USB (or async serial) interface and a tty terminal on host side.  
 
-To edit the Database file, both source and target keyboard layouts, I prepaired a dedicated "key assembler in excel", so I can boldly recommend you to use the excel file `PS2toMSX_Database_Compiler.xlsm` available at github page.  
+To edit the Database file, both source and target keyboard layouts, I prepaired a dedicated "key assembler in excel", so I can boldly recommend you to use the excel file `PS2toMSX_Database_Compiler.xlsm` available at github page. The excel file exports a IHD.hex (Intel Hex Database) to be hot applyed to PS/2 to MSX Keyboard Converter when it boots without PS/2 Keyboard.  
+
+************************** IMPORTANT ******************************  
+If you are using Blackpill board and are uploading Database through USB, 
+please do a FULL DISCONNECT (ALL lines INCUDING POWER) from MSX,
+to avoid short circuit through power supply lines!  
+It would be better to do this with Black Pill pulled out from PS/2 to MSX Keyboard Converter board.  
+*******************************************************************  
 
 The default database mappings for the keyboard layouts are:
 
@@ -225,9 +232,9 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 
 # The Database structure: Keyboard from/to mapping
 
-This design was developed to connect an ABNT-2 brazilian PC keyboard to the brazilian MSX Sharp/Epcom HB-8000 as default, but it is very easy to change its mapping:
+This design was developed to connect, as default, an ABNT-2 brazilian PC keyboard to the brazilian MSX Sharp/Epcom HB-8000, but it is very easy to apply a hot change of its mapping:
 
-- You have to compile and upload this new database to the Converter. This task is easily managed with the help of a Database compiler: The excel file named `PS2toMSX_Database_Compiler.xlsm`. This file has 3 sheets: One for HB-8000, the second as XP-800 and the third one as an International MSX. Unfortunately, the last one is not tested.  
+- You have to compile and upload this new database to the Converter. This task is easily managed with the help of a Database compiler: The excel file named `PS2toMSX_Database_Compiler.xlsm`. This file has 3 sheets: One for HB-8000, the second as XP-800 and the third one as an International MSX. Unfortunately, the last one was not tested.  
 
 
 ## Technical details about the Database structure
@@ -243,12 +250,12 @@ This design was developed to connect an ABNT-2 brazilian PC keyboard to the braz
 	  |  (bit 5): default value of enable_xon_xoff;  
 	  |  (bit 4): default value of ps2numlockstate at power up;  
 	  |  (bits 3-0): y_dummy (non valid colunm);
-	- Bytes 4-7: Reeserved - Keep it as 0xFFFFFFFF;
+	- Bytes 4-7: Reserved - Keep it as 0xFFFFFFFF;
         When this copy of the Database is let unavailable, the first line becomes ("0x00", "0x00", "0x00", "0x00", "0x01", "0x02", 
 	"0x04", "0x08"), meaning to seek the next one.
 
 	On the line 319 (the last one) there are information related to this Database integrity:  
-	- Bytes 0-5: Reeserved - Keep each byte as 0xFF;  
+	- Bytes 0-5: Reserved - Keep each byte as 0xFF;  
 	- Byte 6: CheckSum (Integrity);  
 	- Byte 7: bcc (a type of vertical parity used for integrity);  
 
