@@ -17,11 +17,13 @@ The differencial of this design is to allow user to customize and do a hot updat
 To edit the Database file, both source and target keyboard layouts, I prepaired a dedicated "key assembler in excel", so I can boldly recommend you to use the excel file `PS2toMSX_Database_Compiler.xlsm` available at github page. The excel file exports a IHD.hex (Intel Hex Database) to be hot applyed to PS/2 to MSX Keyboard Converter when it boots without PS/2 Keyboard.  
 
 *******************************************************************  
-**************************IMPORTANT**************************
+**************************IMPORTANT**************************  
 If you are using Blackpill board and are uploading Database through USB, 
-please do a FULL DISCONNECT (ALL lines INCUDING POWER) from MSX,
+please do a FULL DISCONNECT (ALL lines INCUDING POWER) from MSX,  
 to avoid short circuit through power supply lines!  
-It would be better to do this with Black Pill pulled out from PS/2 to MSX Keyboard Converter board.  
+I really suggest that the Black Pill board be pulled out from PS/2 to MSX Keyboard Converter board,  
+as the power is going to be supplyed from USB and the heavy task to reconnect all will be saved,  
+if you decided to don't use connector on J1.  
 *******************************************************************  
 
 The default database mappings for the keyboard layouts are:
@@ -38,7 +40,7 @@ This firmware was made to support both Blue Pill and Black Pill and it is part o
 1.3) Schematics and PCB design:
 1.3.1) Electronics part Schematics with Kicad files;
 1.3.2) Single sided PCB layout with Kicad files and complete set of Gerber files;
-1.3.3) The performance tests of this one are inside the PS/2 to MSX Converter Tester folder.
+1.4) The performance tests of this one are inside the PS/2 to MSX Converter Tester folder.
 
 2)The PS/2 to MSX Converter Tester, which contains:
 2.1) The firmware with source files;
