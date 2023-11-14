@@ -18,12 +18,8 @@ To edit the Database file, both source and target keyboard layouts, I prepaired 
 
 *******************************************************************  
 **************************IMPORTANT**************************  
-If you are using Blackpill board and are uploading Database through USB, 
-please do a FULL DISCONNECT (ALL lines INCUDING POWER) from MSX,  
-to avoid short circuit through power supply lines!  
-I really suggest that the Black Pill board be pulled out from PS/2 to MSX Keyboard Converter board,  
-as the power is going to be supplyed from USB and the heavy task to reconnect all will be saved,  
-if you decided to don't use connector on J1.  
+If you are using Blackpill board and are uploading Database through USB, please do a FULL DISCONNECT (ALL lines INCUDING POWER) from MSX, to avoid short circuit through power supply lines!  
+I really suggest that the Black Pill board be pulled out from PS/2 to MSX Keyboard Converter board, as the power is going to be supplyed from USB and the heavy task to reconnect all will be saved, if you decided to don't use connector on J1.  
 *******************************************************************  
 
 The default database mappings for the keyboard layouts are:
