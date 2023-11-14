@@ -14,14 +14,6 @@ This interface has the function of connect a PS/2 keyboard (or a USB one in comp
 
 The differencial of this design is to allow user to customize and do a hot update of the database layout of this PS/2 Keyboard, as like as the MSX one, through an USB (or async serial) interface and a tty terminal on host side.  
 
-To edit the Database file, both source and target keyboard layouts, I prepaired a dedicated "key assembler in excel", so I can boldly recommend you to use the excel file `PS2toMSX_Database_Compiler.xlsm` available at github page. The excel file exports a IHD.hex (Intel Hex Database) to be hot applyed to PS/2 to MSX Keyboard Converter when it boots without PS/2 Keyboard.  
-
-*******************************************************************  
-**************************IMPORTANT**************************  
-If you are using Blackpill board and are uploading Database through USB, please do a FULL DISCONNECT (ALL lines INCUDING POWER) from MSX, to avoid short circuit through power supply lines!  
-I really suggest that the Black Pill board be pulled out from PS/2 to MSX Keyboard Converter board, as the power is going to be supplyed from USB and the heavy task to reconnect all will be saved, if you decided to don't use connector on J1.  
-*******************************************************************  
-
 The default database mappings for the keyboard layouts are:
 
 - Source (PS/2 keyboard): 275 (ABNT2 layout - Brazilian Technical Norms Association);
@@ -233,7 +225,18 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 
 This design was developed to connect, as default, an ABNT-2 brazilian PC keyboard to the brazilian MSX Sharp/Epcom HB-8000, but it is very easy to apply a hot change of its mapping:
 
-- You have to compile and upload this new database to the Converter. This task is easily managed with the help of a Database compiler: The excel file named `PS2toMSX_Database_Compiler.xlsm`. This file has 3 sheets: One for HB-8000, the second as XP-800 and the third one as an International MSX. Unfortunately, the last one was not tested.  
+- You have to compile and upload this new database to the Converter. This task is easily managed with the help of a Database compiler: The excel file named `PS2toMSX_Database_Compiler.xlsm`.
+
+To edit and compile the Database file, both source and target keyboard layouts, I prepaired a dedicated "key assembler in excel", so I can boldly recommend you to use the excel file `PS2toMSX_Database_Compiler.xlsm` available at github page. The excel file exports a IHD.hex (Intel Hex Database) to be hot applyed to PS/2 to MSX Keyboard Converter when it boots without PS/2 Keyboard.  
+The Database Compiler file has 3 sheets: One for HB-8000, the second as XP-800 and the third one as an International MSX. Unfortunately, the last one was not tested. Just fillin the table, click on the keyboard image of upper left of the sheet and wait VBA has been concluded.  
+ 
+*******************************************************************  
+<div align= "center"><strong>IMPORTANT</strong>  </div> 
+<div align="left">If you are using Blackpill board and are uploading Database through USB, please do a FULL DISCONNECT (ALL lines INCUDING POWER) from MSX,  to avoid short circuit through power supply lines!  
+I really suggest that the Black Pill board be pulled out from PS/2 to MSX Keyboard Converter board, as the power is going to be supplyed from USB and the heavy task to reconnect all will be saved, if you decided to don't use connector on J1.  
+
+*******************************************************************  
+
 
 
 ## Technical details about the Database structure
