@@ -134,7 +134,7 @@ The connections are:
 
 2) MSX computer:
 
-Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 to Y3), Port C6 (Caps Lock, pin 11 of DIP package), and for Russian and Japanese Computers (Cyrillic and Kana alphabets), you have to get access to YM2149 IOB7, pin 6 of DIP package.  
+Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 to Y3), Port C6 (Caps Lock, pin 11 of DIP package), and for Russian and Japanese Computers (Cyrillic and Kana alphabets), you have to get access to YM2149/AY3-8910 IOB7, pin 6 of DIP package, or, if your MSX is equipped with S1985(MSX-SYSTEM II), you have to have granted access to pins 71 and 72.  
 - Y3 - Connect to MSX PPI 8255 Signal PC3 (HB-8000 CI-15 Pin 17 / XP-800 CI-4 Pin 17);  
 - Y2 - Connect to MSX PPI 8255 Signal PC2 (HB-8000 CI-15 Pin 16 / XP-800 CI-4 Pin 16);  
 - Y1 - Connect to MSX PPI 8255 Signal PC1 (HB-8000 CI-15 Pin 15 / XP-800 CI-4 Pin 15);  
@@ -147,8 +147,8 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 - X2 - Connect to MSX PPI 8255 Signal PB2 (HB-8000 CI-15 Pin 20 / XP-800 CI-4 Pin 20);  
 - X1 - Connect to MSX PPI 8255 Signal PB1 (HB-8000 CI-15 Pin 19 / XP-800 CI-4 Pin 19);  
 - X0 - Connect to MSX PPI 8255 Signal PB0 (HB-8000 CI-15 Pin 18 / XP-800 CI-4 Pin 18);  
-- Caps LED - Connect to MSX PPI 8255 Signal PC6 (HB-8000 CI-15 Pin 11 / XP-800 CI-4 Pin 11);  
-- Kana LED - Connect to MSX YM2149 or AY3-8910 IOB7, pin 6 of DIP package. If the MSX doesn't have this indicator LED, you can leave it open, as it already has an internal pull-up connection. In brazilian, argentinian and most european MSX, for example, this is a non-connect pin.   
+- Caps LED - Connect to MSX PPI 8255 Signal PC6 (HB-8000 CI-15 Pin 11 / XP-800 CI-4 Pin 11) or S1985 Pin 71;  
+- Kana LED - Connect to MSX YM2149 or AY3-8910 IOB7, pin 6 of DIP package or S1985 Pin 72. If the MSX doesn't have this indicator LED, you can leave it open, as it already has an internal pull-up connection. In brazilian, argentinian and most european MSX, for example, this is a non-connect pin.   
 
 3) Serial console:
  It is the only option for console available if you are using Blue Pill. See ## Why not STM32F103C8T6 Blue Pill?
@@ -188,7 +188,7 @@ The connections are:
 
 2) MSX computer:
 
-Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 to Y3), Port C6 (Caps Lock, pin 11 of DIP package), and for Russian and Japanese Computers (Cyrillic and Kana alphabets), you have to get access to YM2149 IOB7, pin 6 of DIP package.
+Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 to Y3), Port C6 (Caps Lock, pin 11 of DIP package), and for Russian and Japanese Computers (Cyrillic and Kana alphabets), you have to get access to YM2149/AY3-8910 IOB7, pin 6 of DIP package, or, if your MSX is equipped with S1985(MSX-SYSTEM II), you have to have granted access to pins 71 and 72.  
 
 - Y3 - Connect to MSX PPI 8255 Signal PC3 (HB-8000 CI-15 Pin 17 / XP-800 CI-4 Pin 17);  
 - Y2 - Connect to MSX PPI 8255 Signal PC2 (HB-8000 CI-15 Pin 16 / XP-800 CI-4 Pin 16);  
@@ -202,8 +202,8 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 - X2 - Connect to MSX PPI 8255 Signal PB2 (HB-8000 CI-15 Pin 20 / XP-800 CI-4 Pin 20);  
 - X1 - Connect to MSX PPI 8255 Signal PB1 (HB-8000 CI-15 Pin 19 / XP-800 CI-4 Pin 19);  
 - X0 - Connect to MSX PPI 8255 Signal PB0 (HB-8000 CI-15 Pin 18 / XP-800 CI-4 Pin 18);  
-- Caps LED - Connect to MSX PPI 8255 Signal PC6 (HB-8000 CI-15 Pin 11 / XP-800 CI-4 Pin 11);  
-- Kana LED - Connect to MSX YM2149 or AY3-8910 IOB7, pin 6 of DIP package. If the MSX doesn't have this indicator LED, you can leave it open, as it already has an internal pull-up connection. In brazilian, argentinian and most european MSX, for example, this is a non-connect pin.   
+- Caps LED - Connect to MSX PPI 8255 Signal PC6 (HB-8000 CI-15 Pin 11 / XP-800 CI-4 Pin 11) or S1985 Pin 71;  
+- Kana LED - Connect to MSX YM2149 or AY3-8910 IOB7, pin 6 of DIP package or S1985 Pin 72. If the MSX doesn't have this indicator LED, you can leave it open, as it already has an internal pull-up connection. In brazilian, argentinian and most european MSX, for example, this is a non-connect pin.   
   
 3) USB Type C: Needed only to update internal PS/2 to MSX key mapping Database. To create this Intel Hex file, better to use the Macro based Excel file, so you have to trust and enable macro excecution in excel app. The USB cable is the same as you use with yor mobile phone (USB Type-A Male x USB Type C Male).  
   
@@ -227,8 +227,9 @@ This design was developed to connect, as default, an ABNT-2 brazilian PC keyboar
 
 - You have to compile and upload this new database to the Converter. This task is easily managed with the help of a Database compiler: The excel file named `PS2toMSX_Database_Compiler.xlsm`.
 
-To edit and compile the Database file, both source and target keyboard layouts, I prepaired a dedicated "key assembler in excel", so I can boldly recommend you to use the excel file `PS2toMSX_Database_Compiler.xlsm` available at github page. The excel file exports the IHD.hex file (Intel Hex Database) to be hot applyed to PS/2 to MSX Keyboard Converter, when this one boots up with no PS/2 Keyboard pluged in.  
-The Database Compiler file has 3 sheets: One for HB-8000, the second as XP-800 and the third one as an International MSX. Unfortunately, the last one was not tested. Just fillin the table, click on the keyboard image of upper left of the sheet and wait VBA has been concluded.  
+To edit and compile the Database file, both source and target keyboard layouts, I prepaired a dedicated "key assembler in excel", so I can boldly recommend you to use the excel file `PS2toMSX_Database_Compiler.xlsm` available at github page.  
+The Database Compiler file has 3 sheets: One for HB-8000, the second as XP-800 and the third one as an International MSX. Unfortunately, the last one was not tested. Just fillin the table, click on the keyboard image of upper left of the current sheet and wait for VBA has been concluded.  
+The Database Compiler excel file exports the IHD.hex file (Intel Hex Database) to be hot applyed to PS/2 to MSX Keyboard Converter's Console, when this one boots up with no PS/2 Keyboard pluged in. Just follow console instructions. You may use TIO as a terminal linux app to upload .  
  
 *******************************************************************  
 <div align= "center"><strong>IMPORTANT</strong>  </div> 
