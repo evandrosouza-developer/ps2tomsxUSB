@@ -51,8 +51,8 @@ This firmware powers and has been tested on the following Windows PS/2 keyboards
 - Clone KE11090749;  
 - Clone #09100.  
   
-The inspiring code for the PS/2 module, a PS/2 to USB keyboard adapter, was originally developed based on Cherry G80-3000LSMDE.
-
+The inspiring code for the PS/2 module, a PS/2 to USB keyboard adapter, was originally developed based on Cherry G80-3000LSMDE.  
+  
 
 # Why not STM32F103C8T6 Blue Pill?
 
