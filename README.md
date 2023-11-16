@@ -39,21 +39,19 @@ This firmware was made to support both Blue Pill and Black Pill and it is part o
 3) Tool to create/modify the Database (Translation tables to map from PS/2 Scan Codes to MSX Matrix Codes)
 in excel, but it has compatible macros to be executed by Libre Office, Open Office and so on.
 
-4) Tini TTY I/O - tio (Linux app with source files) to communicate with console and easily allowing the
+4) Tini TTY I/O - `tio` (Linux app with source files) to communicate with console and easily allowing the
 user to use it with different keyboard layouts and languages.
 ```
 In case of STM32F103C8T6 (Flash 64K RAM 20K) Blue Pill, you have to aplly STM32F103C6T6 (Flash 32K RAM 10K) without change anything else.
 
 In case of Black Pill, the base system is STM32F401CCU6 so, to use a more memory one, just follow the same instructions here.
 
-This firmware powers and has been tested on the following Windows keyboards, with brazilian 275 layout:  
+This firmware powers and has been tested on the following Windows PS/2 keyboards, with brazilian 275 layout:  
 - Compaq RT235BTWBR;  
 - Clone KE11090749;  
-- Clone #09100.
-
-
-The original code was originally developed based on:  
-- Cherry G80-3000LSMDE.
+- Clone #09100.  
+  
+The inspiring code for the PS/2 module, a PS/2 to USB keyboard adapter, was originally developed based on Cherry G80-3000LSMDE.
 
 
 # Why not STM32F103C8T6 Blue Pill?
@@ -225,7 +223,7 @@ This design was developed to connect, as default, an ABNT-2 brazilian PC keyboar
 
 To edit and compile the Database file, both source and target keyboard layouts, I prepaired a dedicated "key assembler in excel", so I can boldly recommend you to use the excel file `PS2toMSX_Database_Compiler.xlsm` available at github page.  
 The Database Compiler file has 3 sheets: One for HB-8000, the second as XP-800 and the third one as an International MSX. Unfortunately, the last one was not tested. Just fillin the table, click on the keyboard image of upper left of the current sheet and wait for VBA has been concluded.  
-The Database Compiler excel file exports the IHD.hex file (Intel Hex Database) to be hot applyed to PS/2 to MSX Keyboard Converter's Console, when this one boots up with no PS/2 Keyboard pluged in. Just follow console instructions. You may use TIO as a terminal linux app to upload .  
+The Database Compiler excel file exports the IHD.hex file (Intel Hex Database) to be hot applyed to PS/2 to MSX Keyboard Converter's Console, when this one boots up with no PS/2 Keyboard pluged in. Just follow console instructions. You may use `tio` as a terminal linux app to upload .  
  
 *******************************************************************  
 <div align= "center"><strong>IMPORTANT</strong>  </div> 
