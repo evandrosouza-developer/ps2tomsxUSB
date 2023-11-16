@@ -153,12 +153,10 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 3) Serial console:
  It is the only option for console available if you are using Blue Pill. See ## Why not STM32F103C8T6 Blue Pill?
 
- The connection is needed only to update internal PS/2 to MSX key mapping Database. To create this Intel Hex file, better to use the Macro based Excel file, so you have to trust and enable macro excecution in excel app. 
-
-  Config: 115200, 8, n, 1 (115200 bps, 8 bits, no parity, 1 stop bit);
-
+  The connection is needed only to update internal PS/2 to MSX key mapping Database.  
+  Config: 115200, 8, n, 1 (115200 bps, 8 bits, no parity, 1 stop bit);  
   Tx: A2  
-  Rx: A3
+  Rx: A3  
 
   *******************************************************************************************************
 
@@ -208,11 +206,9 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 3) USB Type C: Needed only to update internal PS/2 to MSX key mapping Database. To create this Intel Hex file, better to use the Macro based Excel file, so you have to trust and enable macro excecution in excel app. The USB cable is the same as you use with yor mobile phone (USB Type-A Male x USB Type C Male).  
   
 4) Serial console: Same observations of USB are applicable here, with exception of the cable itself. Here the connection has to be done with TX of your host system connected with RX of the PS/2 to MSX Keyboard Converter (device), and the device's TX has to be connected to host's RX.  
-  
-  Config: 115200, 8, n, 1 (115200 bps, 8 bits, no parity, 1 stop bit);
-
-  Tx: A9  
-  Rx: A10  
+   Config: 115200, 8, n, 1 (115200 bps, 8 bits, no parity, 1 stop bit);  
+   Tx: A9  
+   Rx: A10  
 
   *******************************************************************************************************
 
@@ -225,7 +221,7 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 
 This design was developed to connect, as default, an ABNT-2 brazilian PC keyboard to the brazilian MSX Sharp/Epcom HB-8000, but it is very easy to apply a hot change of its mapping:
 
-- You have to compile and upload this new database to the Converter. This task is easily managed with the help of a Database compiler: The excel file named `PS2toMSX_Database_Compiler.xlsm`.
+- You have to compile and upload this new database to the Converter. This task is easily managed with the help of a Database compiler: The macro enabled excel file named `PS2toMSX_Database_Compiler.xlsm`.
 
 To edit and compile the Database file, both source and target keyboard layouts, I prepaired a dedicated "key assembler in excel", so I can boldly recommend you to use the excel file `PS2toMSX_Database_Compiler.xlsm` available at github page.  
 The Database Compiler file has 3 sheets: One for HB-8000, the second as XP-800 and the third one as an International MSX. Unfortunately, the last one was not tested. Just fillin the table, click on the keyboard image of upper left of the current sheet and wait for VBA has been concluded.  
