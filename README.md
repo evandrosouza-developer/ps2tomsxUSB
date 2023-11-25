@@ -223,13 +223,13 @@ This design was developed to connect, as default, an ABNT-2 brazilian PC keyboar
 
 To edit and compile the Database file, both source and target keyboard layouts, I prepaired a dedicated "key assembler in excel", so I can boldly recommend you to use the excel file `PS2toMSX_Database_Compiler.xlsm` available at github page.  
 The Database Compiler file has 3 sheets: One for HB-8000, the second as XP-800 and the third one as an International MSX. Unfortunately, the last one was not tested. Just fillin the table, click on the keyboard image of upper left of the current sheet and wait for VBA has been concluded.  
-The Database Compiler excel file exports the IHD.hex file (Intel Hex Database) to be hot applyed to PS/2 to MSX Keyboard Converter's Console, when this one boots up with no PS/2 Keyboard pluged in. Just follow console instructions. You may use `tio` as a terminal linux app to upload .  
+The Database Compiler excel file exports the IHD.hex file (Intel Hex Database) to be hot applyed to PS/2 to MSX Keyboard Converter's Console, when this one boots up with no PS/2 Keyboard pluged in. Just follow console instructions. You may use `tio` as a terminal linux app to upload it.  
  
 *******************************************************************  
 <div align= "center"><strong>IMPORTANT</strong>  </div> 
 <div align="left">If you are using Blackpill board and are uploading Database through USB, please do a FULL DISCONNECT (ALL lines INCUDING POWER) from MSX,  to avoid short circuit through power supply lines!  
 
-I really suggest that the Black Pill board be pulled out from PS/2 to MSX Keyboard Converter board, as the power is going to be supplyed from USB and the heavy task to reconnect all will be saved, if you decided to don't use connector on J1.  
+I really suggest that the Black Pill board be pulled out from PS/2 to MSX Keyboard Converter board, as the power is going to be supplyed from USB and the heavy task to reconnect all will be saved, if you decided not to use the connector on the J1, which would simplify and make the task much safer.
 
 *******************************************************************  
 
