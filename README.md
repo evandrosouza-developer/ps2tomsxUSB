@@ -6,7 +6,7 @@ First of all, to people who use or had used MSX, welcome, bem-vindos, welkom, bi
 
 Instead of an application to this old japanese home computer standards is not so widely useful in nowadays, I made this to learn STM32 hardware and software technics, and I'd like it to be useful and let us back in time and make our MSX computer jewlers work with joyful to our pleasure.
 
-The MSX Keyboard enviroment components (PS/2 to MSX Keyboard Converter, MSX Keyboard subsystem Emilator and the modifyed TIO - A simple terminal) are fully functional and debugged and here I used a lot of concepts that, IMHO could be used as idea sources to your applications.  
+The MSX Keyboard enviroment components (PS/2 to MSX Keyboard Converter, MSX Keyboard subsystem Emulator and the modifyed TIO - A simple terminal) are fully functional and debugged and here I used a lot of concepts that, IMHO could be used as idea sources to your applications.  
 
 # Lets do it!
 
