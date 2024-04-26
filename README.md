@@ -6,7 +6,7 @@ First of all, to people who use or had used MSX, welcome, bem-vindos, welkom, bi
 
 Instead of an application to this old japanese home computer standards is not so widely useful in nowadays, I made this to learn STM32 hardware and software technics, and I'd like it to be useful and let us back in time and make our MSX computer jewlers work with joyful to our pleasure.
 
-The MSX Keyboard enviroment components (PS/2 to MSX Keyboard Converter, MSX Keyboard subsystem Emulator and the modifyed TIO - A simple terminal) are fully functional and debugged and here I used a lot of concepts that, IMHO could be used as idea sources to your applications.  
+The MSX Keyboard enviroment components (PS/2 to MSX Keyboard Converter, MSX Keyboard subsystem Emilator and the modifyed TIO - A simple terminal) are fully functional and debugged and here I used a lot of concepts that, IMHO could be used as idea sources to your applications.  
 
 # Lets do it!
 
@@ -98,15 +98,15 @@ Create the image file to be sent to the MCU (Micro Controller Unit):
 ```
 make
 ```
-The created image compiled with the Arm GNU Toolchain 12.3.1 20230626 (Arm GNU Toolchain 12.3.Rel1 (Build arm-12.35)) on an aarch64 debian bullseye linux computer is created with the following characteristics, according to the choosen MCU:
+The created image compiled with the Arm GNU Toolchain 13.2.Rel1 20231030 on an aarch64 debian bullseye linux computer is created with the following characteristics, according to the choosen MCU:
 ```
 arm-none-eabi-size ps2-msx-kb-convF4.elf
    text	   data	    bss	    dec	    hex	filename
-  35592	     60	   8120	  43772	   aafc	ps2-msx-kb-convF4.elf
+  35900	    352	   8436	  44688	   ae90	ps2-msx-kb-convF4.elf
 
 arm-none-eabi-size ps2-msx-kb-convF1.elf
    text	   data	    bss	    dec	    hex	filename
-  26900	     24	   2176	  29100	   71ac	ps2-msx-kb-convF1.elf
+  27216	    320	   2492	  30028	   754c	ps2-msx-kb-convF1.elf
 
 ```
 
