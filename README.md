@@ -70,18 +70,22 @@ If you plan to debug:
 - `arm-none-eabi-gdb`
 - `stlink + openocd`
 
-Obs.: If you plan to keep only one copy of LibopenCM3 in your computer, I strongly suggest you to setup the variable OPENCM3_DIR in our system enviroment.
-
 # Preparations
 
-After cloning the repository you need to make the following procedure:
+Clone the libopencm3 repository needed by the following procedure:
+```
+cd <YourDevelopDirectory>
+git clone https://libopencm3/libopencm3
+```
 
-Go to libopencm3 you cloned (eg: cd libopencm3) and make it to be useful by typing:
+Go to libopencm3 you cloned, and make libs compiled and available, by typing:
 
 ```
 cd libopencm3
 make TARGETS='stm32/f1 stm32/f4'
 ```
+
+Obs.: If you plan to keep only one copy of LibopenCM3 in your computer, I strongly suggest you to setup the variable OPENCM3_DIR in our system enviroment.
 
 Go to your PS/2 to MSX Converter Tester project folder and assure that you choose the right target MCU in the system.h file line 69, and make, as follows:
 
