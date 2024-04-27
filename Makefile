@@ -97,10 +97,10 @@ ifneq ("$(wildcard $(DSN_CONF_FILE))","") #Check if CONF_FILE is available
 
 ################=== First step: Error conditions processing ===#################
   else #ifeq ($(word 2,$(MCU)),MCU)
-    $(error String $(WHAT_FIND) not found on $(CONF_FILE))
+    $(error String $(WHAT_FIND) not found on $(DSN_CONF_FILE))
   endif #ifeq ($(word 2,$(MCU)),MCU)
 
-else #ifneq ("$(wildcard $(CONF_FILE))","")
-  $(error $(CONF_FILE) NOT FOUND)
+else #ifneq ("$(wildcard $(DSN_CONF_FILE))","")
+  $(error $(DSN_CONF_FILE) NOT FOUND)
 endif #ifneq ("$(wildcard $(CONF_FILE))","")
 
