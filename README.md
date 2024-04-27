@@ -89,7 +89,7 @@ Obs.: If you plan to keep only one copy of LibopenCM3 in your computer, I strong
 
 Go to your PS/2 to MSX Converter Tester project folder and assure that you choose the right target MCU in the system.h file line 69, and make, as follows:
 
-With a plain text editor:
+With a plain text editor, do:
 ```
 #define MCU                       STM32F401
 or
