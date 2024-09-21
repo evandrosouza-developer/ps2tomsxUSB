@@ -70,26 +70,22 @@ If you plan to debug:
 - `arm-none-eabi-gdb`
 - `stlink + openocd`
 
+Obs.: If you plan to keep only one copy of LibopenCM3 in your computer, I strongly suggest you to setup the variable OPENCM3_DIR in our system enviroment.
+
 # Preparations
 
-Clone the libopencm3 repository needed by the following procedure:
-```
-cd <YourDevelopDirectory>
-git clone https://libopencm3/libopencm3
-```
+After cloning the repository you need to make the following procedure:
 
-Go to libopencm3 you cloned, and make libs compiled and available, by typing:
+Go to libopencm3 you cloned (eg: cd libopencm3) and make it to be useful by typing:
 
 ```
 cd libopencm3
 make TARGETS='stm32/f1 stm32/f4'
 ```
 
-Obs.: If you plan to keep only one copy of LibopenCM3 in your computer, I strongly suggest you to setup the variable OPENCM3_DIR in our system enviroment.
-
 Go to your PS/2 to MSX Converter Tester project folder and assure that you choose the right target MCU in the system.h file line 69, and make, as follows:
 
-With a plain text editor, do:
+With a plain text editor:
 ```
 #define MCU                       STM32F401
 or
@@ -102,15 +98,15 @@ Create the image file to be sent to the MCU (Micro Controller Unit):
 ```
 make
 ```
-The created image compiled with the Arm GNU Toolchain 13.2.Rel1 20231030 on an aarch64 debian bullseye linux computer is created with the following characteristics, according to the choosen MCU:
+The created image compiled with the Arm GNU Toolchain 13.3.Rel1 Released: July 4, 2024 on an aarch64 debian bullseye linux computer is created with the following characteristics, according to the choosen MCU:
 ```
 arm-none-eabi-size ps2-msx-kb-convF4.elf
    text	   data	    bss	    dec	    hex	filename
-  35900	    352	   8436	  44688	   ae90	ps2-msx-kb-convF4.elf
+  35900	    384	   8436	  44720	   aeb0	ps2-msx-kb-convF4.elf
 
 arm-none-eabi-size ps2-msx-kb-convF1.elf
    text	   data	    bss	    dec	    hex	filename
-  27216	    320	   2492	  30028	   754c	ps2-msx-kb-convF1.elf
+  27224	    352	   2492	  30068	   7574	ps2-msx-kb-convF1.elf
 
 ```
 
@@ -153,7 +149,7 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 - Kana LED - Connect to MSX YM2149 or AY3-8910 IOB7, pin 6 of DIP package or S1985 Pin 72. If the MSX doesn't have this indicator LED, you can leave it open, as it already has an internal pull-up connection. In brazilian, argentinian and most european MSX, for example, this is a non-connect pin.   
 
 3) Serial console:
- It is the only option for console available if you are using Blue Pill. See ## Why not STM32F103C8T6 Blue Pill?
+ It is the only option for console available if you are using Blue Pill. See Why not STM32F103C8T6 Blue Pill?
 
   The connection is needed only to update internal PS/2 to MSX key mapping Database.  
   Config: 115200, 8, n, 1 (115200 bps, 8 bits, no parity, 1 stop bit);  
@@ -162,7 +158,7 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 
   *******************************************************************************************************
 
-  Obs.: It is a only 3.3V port, compatible to TTL levels. Do not use it with "1" level higher than 3.3V!!
+  Obs.: It is a only 3.3V port, compatible to TTL levels, so do NOT use it with "1" level higher than 3.3V!!
 
   *******************************************************************************************************
 
@@ -214,7 +210,7 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 
   *******************************************************************************************************
 
-  Obs.: It uses a 5V tolerant port, which is compatible to TTL levels. Do not use it with "1" level higher than 5V!!
+  Obs.: It uses a 5V tolerant port, which is compatible to TTL levels, so do NOT use it with "1" level higher than 5V!!
 
   *******************************************************************************************************  
 
