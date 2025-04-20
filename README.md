@@ -98,15 +98,15 @@ Create the image file to be sent to the MCU (Micro Controller Unit):
 ```
 make
 ```
-The created image compiled with the Arm GNU Toolchain 13.3.Rel1 Released: July 4, 2024 on an aarch64 debian bullseye linux computer is created with the following characteristics, according to the choosen MCU:
+The created image compiled with the Arm GNU Toolchain 14.2.Rel1 Released: December 10, 2024 on an aarch64 debian bullseye linux computer is created with the following characteristics, according to the choosen MCU:
 ```
 arm-none-eabi-size ps2-msx-kb-convF4.elf
    text	   data	    bss	    dec	    hex	filename
-  35900	    384	   8436	  44720	   aeb0	ps2-msx-kb-convF4.elf
+35796	    384	   8436	  44616	   ae48	ps2-msx-kb-convF4.elf
 
 arm-none-eabi-size ps2-msx-kb-convF1.elf
    text	   data	    bss	    dec	    hex	filename
-  27224	    352	   2492	  30068	   7574	ps2-msx-kb-convF1.elf
+  27152	    352	   2492	  29996	   752c	ps2-msx-kb-convF1.elf
 
 ```
 
