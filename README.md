@@ -6,7 +6,7 @@ First of all, to people who use or had used MSX, welcome, bem-vindos, welkom, bi
 
 Instead of an application to this old japanese home computer standards is not so widely useful in nowadays, I made this to learn STM32 hardware and software technics, and I'd like it to be useful and let us back in time and make our MSX computer jewlers work with joyful to our pleasure.
 
-The MSX Keyboard enviroment components (PS/2 to MSX Keyboard Converter, MSX Keyboard subsystem Emilator and the modifyed TIO - A simple terminal) are fully functional and debugged and here I used a lot of concepts that, IMHO could be used as idea sources to your applications.  
+The MSX Keyboard enviroment components (PS/2 to MSX Keyboard Converter, MSX Keyboard subsystem Emulator and the modifyed TIO - A simple terminal) are fully functional and debugged and here I used a lot of concepts that, IMHO could be used as idea sources to your applications.  
 
 # Lets do it!
 
@@ -36,7 +36,7 @@ This firmware was made to support both Blue Pill and Black Pill and it is part o
 2.3) Schematics design with Kicad files;
 2.4) The performance tests of the PS/2 to MSX Keyboard Converter are located here.
 
-3) Tool to create/modify the Database (Translation tables to map from PS/2 Scan Codes to MSX Matrix Codes)
+3) Open tool to create/modify the Database (Translation tables to map from PS/2 Scan Codes to MSX Matrix Codes)
 in excel, but it has compatible macros to be executed by Libre Office, Open Office and so on.
 
 4) Tini TTY I/O - `tio` (Linux app with source files) to communicate with console and easily allowing the
@@ -83,7 +83,7 @@ cd libopencm3
 make TARGETS='stm32/f1 stm32/f4'
 ```
 
-Go to your PS/2 to MSX Converter Tester project folder and assure that you choose the right target MCU in the system.h file line 69, and make, as follows:
+Go to this ps2-msx-kb-conv (PS/2 to MSX Converter) project folder and assure that you choose the right target MCU in the system.h file line 69, and make, as follows:
 
 With a plain text editor:
 ```
@@ -98,7 +98,7 @@ Create the image file to be sent to the MCU (Micro Controller Unit):
 ```
 make
 ```
-The created image compiled with the Arm GNU Toolchain 14.2.Rel1 Released: December 10, 2024 on an aarch64 debian bullseye linux computer is created with the following characteristics, according to the choosen MCU:
+The created image, compiled with the Arm GNU Toolchain 14.2.Rel1 Released: December 10, 2024, on an aarch64 debian bullseye linux computer is created with the following characteristics, according to the choosen MCU:
 ```
 arm-none-eabi-size ps2-msx-kb-convF4.elf
    text	   data	    bss	    dec	    hex	filename
@@ -132,7 +132,7 @@ The connections are:
 
 2) MSX computer:
 
-Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 to Y3), Port C6 (Caps Lock, pin 11 of DIP package), and for Russian and Japanese Computers (Cyrillic and Kana alphabets), you have to get access to YM2149/AY3-8910 IOB7, pin 6 of DIP package, or, if your MSX is equipped with S1985(MSX-SYSTEM II), you have to have granted access to pins 71 and 72.  
+Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 to Y3), Port C6 (Caps Lock, pin 11 of DIP package), and for Russian, Arabic, Korean and Japanese Computers (Cyrillic and Kana alphabets), you have to get access to YM2149/AY3-8910 IOB7, pin 6 of DIP package, or, if your MSX is equipped with S1985(MSX-SYSTEM II), you have to have granted access to pins 71 and 72.  
 - Y3 - Connect to MSX PPI 8255 Signal PC3 (HB-8000 CI-15 Pin 17 / XP-800 CI-4 Pin 17);  
 - Y2 - Connect to MSX PPI 8255 Signal PC2 (HB-8000 CI-15 Pin 16 / XP-800 CI-4 Pin 16);  
 - Y1 - Connect to MSX PPI 8255 Signal PC1 (HB-8000 CI-15 Pin 15 / XP-800 CI-4 Pin 15);  
@@ -149,7 +149,7 @@ Obs.: You have to access PPI Ports B0 to B7 (Lines X0 to X7), Port C0 to C3 (Y0 
 - Kana LED - Connect to MSX YM2149 or AY3-8910 IOB7, pin 6 of DIP package or S1985 Pin 72. If the MSX doesn't have this indicator LED, you can leave it open, as it already has an internal pull-up connection. In brazilian, argentinian and most european MSX, for example, this is a non-connect pin.   
 
 3) Serial console:
- It is the only option for console available if you are using Blue Pill. See Why not STM32F103C8T6 Blue Pill?
+ It is the only option for console available if you are using Blue Pill. See "Why not STM32F103C8T6 Blue Pill?".
 
   The connection is needed only to update internal PS/2 to MSX key mapping Database.  
   Config: 115200, 8, n, 1 (115200 bps, 8 bits, no parity, 1 stop bit);  
@@ -229,7 +229,7 @@ The Database Compiler excel file exports the IHD.hex file (Intel Hex Database) t
 <div align= "center"><strong>IMPORTANT</strong>  </div> 
 <div align="left">If you are using Blackpill board and are uploading Database through USB, please do a FULL DISCONNECT (ALL lines INCUDING POWER) from MSX,  to avoid short circuit through power supply lines!  
 
-I really suggest that the Black Pill board be pulled out from PS/2 to MSX Keyboard Converter board, as the power is going to be supplyed from USB and the heavy task to reconnect all will be saved, if you decided not to use the connector on the J1, which would simplify and make the task much safer.
+I strongly suggest that the Black Pill board be pulled out from PS/2 to MSX Keyboard Converter board, as the power is going to be supplyed from USB and the heavy task to reconnect all will be saved, if you decided not to use the connector on the J1, which would simplify and make the task much safer.
 
 *******************************************************************  
 
