@@ -247,7 +247,7 @@ I strongly suggest that the Black Pill board be pulled out from PS/2 to MSX Keyb
 	  |  (bits 7-6): Reserved - keep it at high state;  
 	  |  (bit 5): default value of enable_xon_xoff (true to enable it);  
 	  |  (bit 4): default value of ps2numlockstate at power up (true to enable it);  
-	  |  (bits 3-0): y_dummy (non valid colunm);
+	  |  (bits 3-0): y_dummy (non valid colunm) - default value is 15 (0b1111);  
 	- Bytes 4-7: Reserved - Keep it as 0xFFFFFFFF;
         When this copy of the Database is let unavailable, the first line becomes ("0x00", "0x00", "0x00", "0x00", "0x01", "0x02", 
 	"0x04", "0x08"), meaning to seek the next one.
@@ -281,7 +281,7 @@ I strongly suggest that the Black Pill board be pulled out from PS/2 to MSX Keyb
 	Each column has a MSX encoded key, with the following structure:
 	- (bits 7-4) MSX Y PPI 8255 PC3-0 is sent to a BCD decoder with OC outputs, for example:  
 	  |	In the case of Hotbit HB8000, the keyboard scan is done as a 9 columns scan, CI-16 7445N 08 to 00;  
-	  |	If equals to value stored at bits 3-0 of byte 3 of the Database file - default value is 15 (0b1111), there is no MSX key mapped.
+	  |	If equals to value stored at bits 3-0 of byte 3 of the Database file, there is no MSX key mapped.  
 	- (bit 3) => 0: keypress / 1: key release;             
 	- (bits 2-0) MSX X, ie, which bit of the PPI 8255 PB7-0 will carry information of bit 3 (keypress/key release).  
 	
